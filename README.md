@@ -30,7 +30,7 @@ Media Pembelajaran Interaktif **Koding dan Kecerdasan Artifisial (KKA)** untuk j
 5. **Sub-Unit 4: Evaluasi & Kuis Cerdas (25 Soal & Ambang Batas Skor 80)**:
    - 25 butir soal studi kasus CBT (Computer Based Test) berbobot 4 poin per soal (maksimal 100).
    - **Gerbang Kelulusan (KKTP $\ge 80$)**: Jika nilai $< 80$, siswa berstatus belum lulus dan sertifikat terkunci. Siswa harus mengulang evaluasi hingga mencapai skor minimal 80.
-   - **Sertifikat Digital Canvas**: Jika seluruh sub-unit tuntas 100% dan nilai $\ge 80$, sertifikat otomatis terbit di bawah menu Sub-4 dan dapat diunduh (PNG) atau dicetak.
+   - **Sertifikat Digital Canvas**: Jika seluruh sub-unit tuntas 100% dan nilai $\ge 80$, sertifikat resmi otomatis terbit di bawah menu Sub-4 dan siap diunduh (PNG) atau dicetak. Diterbitkan oleh Jurusan PPLG SMKN 1 Bawang, dilengkapi Logo SMKN 1 Bawang (kiri atas), Logo PPLG (kanan atas), serta tanda tangan elektronik (TTE) tersertifikasi BSSN dari Guru Mapel KKA Nindita Rahman, S. Kom.
 
 ---
 
@@ -131,4 +131,4 @@ Jika dijalankan secara lokal tanpa server Netlify (membuka file `index.html` lan
 ---
 
 ## 📜 Lisensi & Hak Cipta
-Dikembangkan untuk mendukung pembelajaran vokasi SMK Koding dan Kecerdasan Artifisial (KKA) Fase F di lingkungan **Kementerian Pendidikan Dasar dan Menengah Republik Indonesia**.
+Dikembangkan untuk mendukung pembelajaran vokasi SMK Koding dan Kecerdasan Artifisial (KKA) Fase F oleh **Jurusan Pengembangan Perangkat Lunak dan Gim (PPLG) SMKN 1 Bawang Banjarnegara**.
