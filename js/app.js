@@ -1087,7 +1087,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
     } else if (id === 2) {
       this.renderSubUnit2(container);
       if (window.robot) window.robot.setState('CONFUSE', 2500);
-      this.showRobotDialogue("Gawat! Ada prompt yang sakit parah! Pasangkan infus formula yang tepat ke dalam 4 slot diagnosa!");
+      this.showRobotDialogue("Gawat! Ada prompt yang sakit parah! Susun 4 kepingan formula R-T-C-F pada 5 studi kasus ini!");
     } else if (id === 3) {
       this.renderSubUnit3(container);
       if (window.robot) window.robot.setState('EXPLAIN', 3000);
@@ -1095,7 +1095,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
     } else if (id === 4) {
       this.renderSubUnit4(container);
       if (window.robot) window.robot.setState('IDLE');
-      this.showRobotDialogue("Waktunya Uji Pemahaman! Jawab 5 studi kasus berikut untuk meraih Sertifikat Kompetensi!");
+      this.showRobotDialogue("Waktunya Uji Pemahaman! Jawab 25 butir evaluasi berikut dan raih skor minimal 80 untuk sertifikat!");
     }
   }
 
@@ -1434,91 +1434,6 @@ SLIDE 5: KESIMPULAN & PENUTUP
           { type: 'dummy', tag: 'Pengecoh', text: 'Sebagai siswa yang bolos magang dan panik' }
         ],
         curedPrompt: 'Sebagai Koordinator Pokja PKL SMK & Instruktur Industri Mitra, susun panduan dan kerangka penulisan Laporan Akhir PKL bidang teknologi. Konteks: Siswa SMK Fase F, bahasa Indonesia formal baku, fokus kompetensi kejuruan. Format: Daftar berbutir terstruktur BAB I s.d. BAB IV + tabel ceklis lampiran.'
-      },
-      {
-        id: 6,
-        title: 'Kasus 6 · Naskah Pitching Wirausaha 90 Detik',
-        specialty: 'Kewirausahaan & Bisnis',
-        patientQuote: '"Bantuin ngomong buat lomba wirausaha"',
-        symptom: 'Pasien Mengalami Disorientasi Waktu & Narasi Bertele-tele',
-        story: 'Tim siswa wirausaha muda SMK akan mempresentasikan prototype produk daur ulang limbah filamen 3D printer di hadapan juri investor dalam waktu tepat 90 detik.',
-        cards: [
-          { type: 'role', tag: 'Role', text: 'Konsultan Start-up Pitching & Mentor Komunikasi Bisnis' },
-          { type: 'task', tag: 'Task', text: 'Rancang naskah pitching elevator pitch 90 detik untuk produk daur ulang' },
-          { type: 'context', tag: 'Context', text: 'Dewan juri kompetisi wirausaha, metode Problem-Solution-Market-Impact' },
-          { type: 'format', tag: 'Format', text: 'Naskah 3 bagian bertempo waktu: Hook (15s), Solusi (50s), CTA (25s)' },
-          { type: 'dummy', tag: 'Pengecoh', text: 'Ceritakan dongeng masa kecil yang mengharukan' },
-          { type: 'dummy', tag: 'Pengecoh', text: 'Sebagai juru kampanye politik yang berorasi keras' }
-        ],
-        curedPrompt: 'Sebagai Konsultan Start-up Pitching & Mentor Komunikasi Bisnis, rancang naskah pitching elevator pitch 90 detik untuk produk daur ulang. Konteks: Dewan juri kompetisi wirausaha, metode Problem-Solution-Market-Impact. Format: Naskah 3 bagian bertempo waktu: Hook (15s), Solusi (50s), CTA (25s).'
-      },
-      {
-        id: 7,
-        title: 'Kasus 7 · SOP Servis Rem ABS Mobil',
-        specialty: 'Teknik Otomotif & Kendaraan Ringan',
-        patientQuote: '"Gimana cara benerin rem mobil yang blong?"',
-        symptom: 'Pasien Berbahaya Tinggi: Tidak Menyebutkan Prosedur K3 & Standar Pabrik',
-        story: 'Guru Otomotif ingin membuat Job Sheet praktikum bengkel tentang prosedur perawatan dan bleeding minyak rem sistem Anti-lock Braking System (ABS) menggunakan scan tool diagnostik OBD-II.',
-        cards: [
-          { type: 'role', tag: 'Role', text: 'Master Technician Otomotif & Instruktur Bengkel Resmi' },
-          { type: 'task', tag: 'Task', text: 'Susun SOP inspeksi dan bleeding sistem rem ABS sesuai manual servis' },
-          { type: 'context', tag: 'Context', text: 'Mobil penumpang modern, wajib prosedur K3 bengkel, gunakan scanner OBD-II' },
-          { type: 'format', tag: 'Format', text: 'Tabel alur kerja 5 tahap: [Tahap, Alat, Prosedur Teknis, Peringatan Bahaya]' },
-          { type: 'dummy', tag: 'Pengecoh', text: 'Bongkar semua pipa rem dengan palu besar' },
-          { type: 'dummy', tag: 'Pengecoh', text: 'Sebagai supir yang panik saat mobil mogok di tol' }
-        ],
-        curedPrompt: 'Sebagai Master Technician Otomotif & Instruktur Bengkel Resmi, susun SOP inspeksi dan bleeding sistem rem ABS sesuai manual servis. Konteks: Mobil penumpang modern, wajib prosedur K3 bengkel, gunakan scanner OBD-II. Format: Tabel alur kerja 5 tahap: [Tahap, Alat, Prosedur Teknis, Peringatan Bahaya].'
-      },
-      {
-        id: 8,
-        title: 'Kasus 8 · UI Dashboard Bank Sampah Mobile',
-        specialty: 'Desain Antarmuka UI/UX',
-        patientQuote: '"Bikin desain aplikasi buat bank sampah"',
-        symptom: 'Pasien Mengabaikan Prinsip Design System & Format Resolusi',
-        story: 'Siswa RPL merancang mockup interface aplikasi mobile "Smart Waste Bank". Desain harus bergaya clean minimalis dengan warna hijau zamrud dan putih, rasio layar smartphone 9:16 untuk portofolio Dribbble.',
-        cards: [
-          { type: 'role', tag: 'Role', text: 'Lead UI/UX Mobile Designer & Design System Specialist' },
-          { type: 'task', tag: 'Task', text: 'Rancang prompt visual dashboard aplikasi mobile pengelolaan sampah digital' },
-          { type: 'context', tag: 'Context', text: 'Clean minimalis modern, dominan putih & emerald green, rasio iOS 9:16' },
-          { type: 'format', tag: 'Format', text: 'Prompt Midjourney V6 parameter (--ar 9:16 --v 6.0) + daftar 4 komponen UI' },
-          { type: 'dummy', tag: 'Pengecoh', text: 'Buat foto tumpukan sampah yang kotor dan bau' },
-          { type: 'dummy', tag: 'Pengecoh', text: 'Sebagai pengguna awam yang bingung memakai HP' }
-        ],
-        curedPrompt: 'Sebagai Lead UI/UX Mobile Designer & Design System Specialist, rancang prompt visual dashboard aplikasi mobile pengelolaan sampah digital. Konteks: Clean minimalis modern, dominan putih & emerald green, rasio iOS 9:16. Format: Prompt Midjourney V6 parameter (--ar 9:16 --v 6.0) + daftar 4 komponen UI.'
-      },
-      {
-        id: 9,
-        title: 'Kasus 9 · Skrip Sensor Suhu DHT22 ESP32',
-        specialty: 'Internet of Things & Elektronika',
-        patientQuote: '"Buatin skrip kodingan sensor suhu arduino"',
-        symptom: 'Pasien Tidak Menyebutkan Pinout, Library, dan Format Data Log',
-        story: 'Siswa Teknik Elektronika merancang sistem monitoring suhu green house sekolah berbasis ESP32 dan sensor DHT22. Data suhu dan kelembaban harus ditampilkan ke Serial Monitor setiap 2 detik dengan penanganan saat sensor putus.',
-        cards: [
-          { type: 'role', tag: 'Role', text: 'IoT Hardware Architect & Embedded Systems Engineer' },
-          { type: 'task', tag: 'Task', text: 'Tuliskan program C++ Arduino IDE membaca sensor DHT22 pada ESP32' },
-          { type: 'context', tag: 'Context', text: 'Library DHTesp, baudrate 115200, interval 2 detik, error fallback if NaN' },
-          { type: 'format', tag: 'Format', text: 'Blok kode C++ bersih beranotasi komentar + diagram skematik pinout wiring' },
-          { type: 'dummy', tag: 'Pengecoh', text: 'Hubungkan kabel sensor langsung ke stopkontak PLN' },
-          { type: 'dummy', tag: 'Pengecoh', text: 'Sebagai orang yang baru pertama kali melihat komponen' }
-        ],
-        curedPrompt: 'Sebagai IoT Hardware Architect & Embedded Systems Engineer, tuliskan program C++ Arduino IDE membaca sensor DHT22 pada ESP32. Konteks: Library DHTesp, baudrate 115200, interval 2 detik, error fallback if NaN. Format: Blok kode C++ bersih beranotasi komentar + diagram skematik pinout wiring.'
-      },
-      {
-        id: 10,
-        title: 'Kasus 10 · Paket Soal HOTS Algoritma',
-        specialty: 'Pedagogi & Kurikulum Merdeka',
-        patientQuote: '"Bikinin soal-soal koding buat murid-murid"',
-        symptom: 'Pasien Tanpa Taksonomi Bloom & Tanpa Rubrik Penilaian',
-        story: 'Guru Informatika SMK ingin menyusun 3 butir soal bertipe High Order Thinking Skills (HOTS) tingkat Analisis (C4) dan Evaluasi (C5) materi algoritma percabangan/perulangan untuk ujian asesmen kompetensi.',
-        cards: [
-          { type: 'role', tag: 'Role', text: 'Pakar Evaluasi Pendidikan Vokasi & Ahli Pedagogi Informatika' },
-          { type: 'task', tag: 'Task', text: 'Rancang 3 butir soal pilihan ganda HOTS analisis algoritma (C4/C5)' },
-          { type: 'context', tag: 'Context', text: 'Kurikulum Merdeka SMK Fase F, studi kasus antrean ritel, pseudocode standar' },
-          { type: 'format', tag: 'Format', text: 'Format butir soal: Stimulus Studi Kasus, 5 Opsi (A-E), Kunci, & Rubrik' },
-          { type: 'dummy', tag: 'Pengecoh', text: 'Tulis tebak-tebakan teka-teki lucu untuk anak kecil' },
-          { type: 'dummy', tag: 'Pengecoh', text: 'Sebagai pengamat berita di televisi yang mengkritik guru' }
-        ],
-        curedPrompt: 'Sebagai Pakar Evaluasi Pendidikan Vokasi & Ahli Pedagogi Informatika, rancang 3 butir soal pilihan ganda HOTS analisis algoritma (C4/C5). Konteks: Kurikulum Merdeka SMK Fase F, studi kasus antrean ritel, pseudocode standar. Format: Format butir soal: Stimulus Studi Kasus, 5 Opsi (A-E), Kunci, & Rubrik.'
       }
     ];
   }
@@ -1595,7 +1510,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
     }
 
     const totalSolved = Object.keys(this.state.doctorSolvedCases).length;
-    const totalScore = totalSolved * 10;
+    const totalScore = totalSolved * 20;
     this.state.minigameScore = totalScore;
 
     const shuffledCards = this.getShuffledCaseCards(currentCase);
@@ -1603,15 +1518,15 @@ SLIDE 5: KESIMPULAN & PENUTUP
     container.innerHTML = `
       <div class="section-header">
         <div class="section-tag">🩺 Sub-Unit 2 · Mini Game Edukasi Susun Urutan Prompt</div>
-        <h2 class="section-title">Klinik "Prompt Doctor": 10 Studi Kasus Industri</h2>
+        <h2 class="section-title">Klinik "Prompt Doctor": 5 Studi Kasus Industri</h2>
         <p class="section-desc">Susun kepingan formula menjadi prompt terstruktur yang utuh! Baca dan sesuaikan urutan 4 pilar standar: <strong>Role ➔ Task ➔ Context ➔ Format</strong>.</p>
       </div>
 
-      <!-- 10 Case Navigation Bar -->
+      <!-- 5 Case Navigation Bar -->
       <div class="case-nav-bar">
         <div style="font-size:12px; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:8px;">
           <span>🩺 Daftar Kasus Pasien:</span>
-          <span style="color:var(--tech); font-size:11px;">(Kasus ${this.doctorCaseIndex + 1} dari 10)</span>
+          <span style="color:var(--tech); font-size:11px;">(Kasus ${this.doctorCaseIndex + 1} dari 5)</span>
         </div>
         <div class="case-pills-list">
           ${cases.map((c, i) => {
@@ -1645,7 +1560,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
           </div>
           <div class="patient-score" style="min-width:110px;">
             <div style="font-size:11px; font-weight:800; color:var(--ink-2); text-transform:uppercase;">Total Pasien Sembuh</div>
-            <div class="patient-score-num" id="doctorScoreDisplay">${totalSolved} / 10</div>
+            <div class="patient-score-num" id="doctorScoreDisplay">${totalSolved} / 5</div>
             <div style="font-size:11px; font-weight:700; color:var(--emerald);">(${totalScore} Poin)</div>
           </div>
         </div>
@@ -1724,9 +1639,9 @@ SLIDE 5: KESIMPULAN & PENUTUP
             </div>
             <div class="cured-body" id="doctorCuredText">"${currentCase.curedPrompt}"</div>
             <div style="display:flex; justify-content:flex-end; margin-top:10px;">
-              ${this.doctorCaseIndex < 9 
+              ${this.doctorCaseIndex < 4 
                 ? `<button class="btn btn-primary" id="btnNextCase" style="padding:8px 18px; font-size:12.5px;">Kasus Berikutnya ➔</button>` 
-                : `<button class="btn btn-primary" id="btnFinishDoctor" style="padding:8px 18px; font-size:12.5px; background:var(--emerald);">🏆 Selesaikan Seluruh 10 Kasus</button>`}
+                : `<button class="btn btn-primary" id="btnFinishDoctor" style="padding:8px 18px; font-size:12.5px; background:var(--emerald);">🏆 Selesaikan Seluruh 5 Kasus</button>`}
             </div>
           </div>
         ` : ''}
@@ -1863,7 +1778,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
       if (window.confetti) {
         window.confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } });
       }
-      this.showRobotDialogue("LUAR BIASA! Seluruh 10 kasus Prompt Doctor berhasil kamu sembuhkan dengan urutan R-T-C-F presisi!");
+      this.showRobotDialogue("LUAR BIASA! Seluruh 5 kasus Prompt Doctor berhasil kamu sembuhkan dengan urutan R-T-C-F presisi!");
     });
   }
 
@@ -2023,8 +1938,8 @@ SLIDE 5: KESIMPULAN & PENUTUP
       // Perfect RTCF Order!
       this.state.doctorSolvedCases[this.doctorCaseIndex] = true;
       const totalSolved = Object.keys(this.state.doctorSolvedCases).length;
-      this.state.minigameScore = totalSolved * 10;
-      if (totalSolved >= 10) {
+      this.state.minigameScore = totalSolved * 20;
+      if (totalSolved >= 5) {
         this.state.progress.sub2 = true;
       }
       this.saveSession();
@@ -2038,7 +1953,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
       if (window.robot) window.robot.setState('CHEER', 3500);
 
       if (totalSolved >= 10) {
-        this.showRobotDialogue("SEMPURNA! Seluruh 10 kasus Prompt Doctor berhasil kamu sembuhkan dengan urutan R-T-C-F yang presisi!");
+        this.showRobotDialogue("SEMPURNA! Seluruh 5 kasus Prompt Doctor berhasil kamu sembuhkan dengan urutan R-T-C-F yang presisi!");
       } else {
         this.showRobotDialogue(`HORE! Kasus ${this.doctorCaseIndex + 1} sembuh total! Urutan pilar R-T-C-F tersusun tepat!`);
       }

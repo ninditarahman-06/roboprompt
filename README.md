@@ -17,9 +17,9 @@ Media Pembelajaran Interaktif **Koding dan Kecerdasan Artifisial (KKA)** untuk j
    - Eksplorasi 4 pilar formula (*Role, Task, Context, Format*), popup detail, dan komparasi prompt asal-asalan vs formula terstruktur.
 
 3. **Sub-Unit 2: Klinik Mini Game "Prompt Doctor"**:
-   - 10 studi kasus nyata bidang vokasi (K3 Bengkel, Python Login, Switch Cisco, Jingle TeFa, Laporan PKL, Pitching Bisnis, Servis Rem ABS, UI Mobile, IoT ESP32, Soal HOTS).
-   - Mekanisme **Drag & Drop** native dan klik kartu formula ke dalam 4 slot diagnosa, dilengkapi kartu pengecoh (*distractor*).
-   - Sistem skor 100 poin (10 poin/kasus) dan penerbitan resep prompt sembuh.
+   - 5 studi kasus nyata bidang vokasi (K3 Bengkel, Python Login, Switch Cisco, Jingle TeFa, Laporan PKL).
+   - Mekanisme **Drag & Drop** native dan susun urutan 4 pilar R-T-C-F, dilengkapi kepingan pengecoh (*distractor*).
+   - Sistem skor 100 poin (20 poin/kasus) dan penerbitan resep prompt sembuh.
 
 4. **Sub-Unit 3: RoboPrompt Studio (Powered by Google Gemini AI)**:
    - **Formula Builder Murni**: Pengguna memasukkan kata atau kalimat sendiri dari awal ke dalam slot Role, Task, Context, Format tanpa template preset.
