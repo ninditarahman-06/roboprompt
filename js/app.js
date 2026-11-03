@@ -974,8 +974,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
   }
 
   explainSubUnit3() {
-    const curCat = this.aiCategories[this.currentAiCategory];
-    const text = `Di RoboPrompt Studio, kamu bisa bereksperimen dengan 5 Jenis AI Generatif: Dokumen, Foto, Musik, Koding, dan Slide Presentasi! Saat ini kamu memilih kategori ${curCat.name}. ${curCat.tip} Klik tombol 'Terapkan Contoh Spesifikasi' untuk melihat penerapannya!`;
+    const text = "Di RoboPrompt Studio, kamu merancang prompt berkualitas tinggi menggunakan formula standar industri R-T-C-F (Role, Task, Context, dan Format). Masukkan kata-katamu pada setiap pilar, lalu klik '⚡ Optimalkan dengan Gemini AI' untuk mendapatkan prompt siap pakai yang profesional!";
     this.showRobotDialogue(text, true, () => {
       this.stopExplanation();
     });
@@ -1991,38 +1990,20 @@ SLIDE 5: KESIMPULAN & PENUTUP
   }
 
   renderSubUnit3(container) {
-    const curCat = this.aiCategories[this.currentAiCategory];
     const isGeminiActive = this.isGeminiConfigured();
 
     container.innerHTML = `
       <div class="section-header">
         <div class="section-tag">🧪 Sub-Unit 3 · Praktik Studio KKA</div>
-        <h2 class="section-title">RoboPrompt Studio: Rekayasa Prompt Lintas AI</h2>
-        <p class="section-desc">Pilih jenis AI Generatif di bawah, ketik kata atau kalimatmu sendiri ke dalam formula builder, lalu minta <strong>Google Gemini AI</strong> mengoptimalkan dan menguji responsnya!</p>
+        <h2 class="section-title">RoboPrompt Studio: Perancang Prompt Formula R-T-C-F</h2>
+        <p class="section-desc">Aplikasi ini dirancang khusus untuk membantumu menyusun prompt yang terstruktur dan berkualitas tinggi sesuai formula <strong>R-T-C-F (Role, Task, Context, Format)</strong>. Masukkan pilar-pilar di bawah, lalu klik <strong>⚡ Optimalkan dengan Gemini AI</strong> untuk menghasilkan prompt siap pakai yang sempurna!</p>
       </div>
 
-      <!-- 5 Categories of Generative AI -->
-      <div class="ai-modalities-wrap">
-        <div class="ai-modalities-title">
-          <span>Pilih Jenis AI Generatif:</span>
-          <span style="font-size:10px; color:var(--tech); font-weight:700;">Setiap kategori memiliki karakteristik R-T-C-F unik</span>
-        </div>
-        <div class="ai-categories-grid" id="aiCategoriesGrid">
-          ${Object.values(this.aiCategories).map(cat => `
-            <div class="ai-cat-pill ${cat.id === this.currentAiCategory ? 'active' : ''}" data-cat="${cat.id}">
-              <span class="ai-cat-icon">${cat.icon}</span>
-              <span class="ai-cat-name">${cat.name}</span>
-              <span class="ai-cat-tools">${cat.tools}</span>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-
-      <!-- Modality Benefit & Tips Banner with Gemini Connection Indicator -->
+      <!-- Formula Standard & Gemini Connection Banner -->
       <div class="modality-banner" id="modalityBanner">
         <div class="modality-desc">
-          <div><strong>🎯 Manfaat Siswa SMK:</strong> ${curCat.benefit}</div>
-          <div style="margin-top:3px; color:var(--ink-2);"><strong>💡 Kunci R-T-C-F:</strong> ${curCat.tip}</div>
+          <div><strong>🎯 Formula Standar Vokasi R-T-C-F:</strong> <strong>R</strong>ole (Peran Ahli) • <strong>T</strong>ask (Tugas Spesifik) • <strong>C</strong>ontext & Constraints (Batasan & Aturan) • <strong>F</strong>ormat (Bentuk Luaran).</div>
+          <div style="margin-top:3px; color:var(--ink-2);"><strong>💡 Kunci Prompt Berkualitas:</strong> Berikan instruksi yang jelas pada keempat pilar untuk meminimalkan halusinasi model AI dan menghasilkan respons yang presisi.</div>
         </div>
         <button class="btn-api-badge" id="btnOpenGeminiModal" title="Periksa status / atur koneksi Google Gemini AI">
           <span class="gemini-status-dot ${isGeminiActive ? '' : 'offline'}"></span>
@@ -2031,48 +2012,48 @@ SLIDE 5: KESIMPULAN & PENUTUP
       </div>
 
       <div class="studio-layout">
-        <!-- Pure User Formula Builder (No Pre-filled Examples) -->
+        <!-- Pure User Formula Builder -->
         <div class="studio-form-card">
           <div class="studio-header-wrap">
-            <span style="font-size:13px; font-weight:800; color:var(--ink);">
-              🛠️ Formula Builder: <span style="color:var(--tech);">${curCat.name}</span>
+            <span style="font-size:13.5px; font-weight:800; color:var(--ink);">
+              🛠️ Formula Prompt Builder (R-T-C-F)
             </span>
-            <span style="font-size:10.5px; font-weight:700; color:var(--ink-2); background:#EDF5FD; padding:3px 8px; border-radius:12px;">
-              Target: ${curCat.tools}
+            <span style="font-size:11px; font-weight:700; color:var(--tech); background:#EDF5FD; padding:4px 10px; border-radius:12px; border:1px solid #CDE2F8;">
+              PPLG SMKN 1 Bawang
             </span>
           </div>
 
           <div class="field-group">
-            <label class="field-label">🎭 1. Role (Peran / Keahlian AI)</label>
-            <input type="text" class="field-input" id="inpRole" placeholder="${curCat.placeholders.role}" />
+            <label class="field-label">🎭 1. Role (Peran / Keahlian Persona AI)</label>
+            <input type="text" class="field-input" id="inpRole" placeholder="Misal: Senior Fullstack Developer & AI Engineer di Industri Teknologi" />
           </div>
 
           <div class="field-group">
             <label class="field-label">🎯 2. Task (Tugas Spesifik yang Dikerjakan)</label>
-            <input type="text" class="field-input" id="inpTask" placeholder="${curCat.placeholders.task}" />
+            <input type="text" class="field-input" id="inpTask" placeholder="Misal: Buatkan fungsi autentikasi login JWT menggunakan Node.js dan Express" />
           </div>
 
           <div class="field-group">
-            <label class="field-label">🛡️ 3. Context & Constraints (Batasan / Konteks)</label>
-            <input type="text" class="field-input" id="inpContext" placeholder="${curCat.placeholders.context}" />
+            <label class="field-label">🛡️ 3. Context & Constraints (Batasan & Aturan Operasional)</label>
+            <input type="text" class="field-input" id="inpContext" placeholder="Misal: Sertakan hashing password bcrypt, penanganan try-catch error, dan expired token 1 jam" />
           </div>
 
           <div class="field-group">
             <label class="field-label">📋 4. Format (Bentuk Luaran yang Diinginkan)</label>
-            <input type="text" class="field-input" id="inpFormat" placeholder="${curCat.placeholders.format}" />
+            <input type="text" class="field-input" id="inpFormat" placeholder="Misal: Kode TypeScript bersih dengan komentar bahasa Indonesia dan contoh respon JSON" />
           </div>
 
           <div style="display:flex; gap:10px; margin-top:14px;">
-            <button class="btn btn-primary" id="btnSynthesizePrompt" style="flex:1; justify-content:center;">
+            <button class="btn btn-primary" id="btnSynthesizePrompt" style="flex:1; justify-content:center; padding:12px 16px; font-weight:800;">
               ⚡ Optimalkan dengan Gemini AI
             </button>
-            <button class="btn btn-secondary" id="btnCopyPrompt" title="Salin formula prompt R-T-C-F lengkap">
-              📋 Salin Formula
+            <button class="btn btn-secondary" id="btnCopyPrompt" title="Salin formula R-T-C-F mentah" style="padding:12px 14px; font-weight:700; white-space:nowrap;">
+              📋 Salin Formula Mentah
             </button>
           </div>
         </div>
 
-        <!-- Real-time Gemini Response Simulator -->
+        <!-- Generated Structured Prompt Result Card -->
         <div class="studio-preview-card">
           <div class="meter-box">
             <div class="meter-ring" id="meterRing" style="--meter-pct:0%;">
@@ -2086,56 +2067,37 @@ SLIDE 5: KESIMPULAN & PENUTUP
 
           <div class="console-box" id="consoleOutput">
             <div class="console-header">
-              <span>// GEMINI AI ENGINE: ${curCat.name.toUpperCase()}</span>
-              <button class="btn-copy-console" id="btnCopyConsole" title="Salin seluruh respons AI ini">
-                📋 Salin Seluruh Hasil
+              <span>// HASIL PROMPT TERSTRUKTUR (FORMULA R-T-C-F)</span>
+              <button class="btn-copy-console" id="btnCopyConsole" title="Salin prompt hasil optimasi">
+                📋 Salin
               </button>
             </div>
-            <div id="consoleText" style="color:#94A3B8;">Ketik pilar formulamu di samping, lalu tekan tombol <strong>"⚡ Optimalkan dengan Gemini AI"</strong> atau <strong>"🚀 Uji Eksekusi"</strong> untuk melihat respons nyata...</div>
+            <div id="consoleText" style="color:#94A3B8; font-size:13px; line-height:1.6;">Lengkapi pilar formulamu di samping, lalu klik tombol <strong>"⚡ Optimalkan dengan Gemini AI"</strong> untuk menyatukan dan menghasilkan prompt siap pakai yang sempurna...</div>
           </div>
 
-          <button class="btn btn-secondary" id="btnRunSimulator" style="width:100%; justify-content:center;">
-            🚀 Uji Eksekusi di Simulator AI
+          <button class="btn btn-primary" id="btnCopyGeneratedPrompt" style="width:100%; justify-content:center; padding:12px 20px; font-size:13.5px; font-weight:800; background:linear-gradient(135deg, #0A6FD6, #00A651);">
+            📋 Salin Prompt
           </button>
         </div>
       </div>
     `;
 
-    // 1. AI Category selection
-    container.querySelectorAll('.ai-cat-pill').forEach(pill => {
-      pill.addEventListener('click', () => {
-        const catId = pill.getAttribute('data-cat');
-        if (this.currentAiCategory !== catId) {
-          this.currentAiCategory = catId;
-          if (window.audioMgr) window.audioMgr.click();
-          this.renderSubUnit3(container);
-          const selCat = this.aiCategories[catId];
-          this.showRobotDialogue(`Kategori terpilih: ${selCat.name}! ${selCat.tip}`);
-        }
-      });
-    });
-
-    // 2. Open Gemini Settings Modal
+    // 1. Open Gemini Settings Modal
     container.querySelector('#btnOpenGeminiModal')?.addEventListener('click', () => {
       this.openGeminiModal();
     });
 
-    // 3. Formula input listeners
+    // 2. Formula input listeners
     ['inpRole', 'inpTask', 'inpContext', 'inpFormat'].forEach(id => {
       document.getElementById(id)?.addEventListener('input', () => this.updateStudioMeter());
     });
 
-    // 4. Optimize with Gemini AI button
+    // 3. Optimize with Gemini AI button
     container.querySelector('#btnSynthesizePrompt')?.addEventListener('click', () => {
-      this.executeGeminiRequest('optimize');
+      this.executeGeminiRequest();
     });
 
-    // 5. Run Simulator button
-    container.querySelector('#btnRunSimulator')?.addEventListener('click', () => {
-      this.executeGeminiRequest('execute');
-    });
-
-    // 6. Copy Formula Prompt button
+    // 4. Copy Raw Formula Prompt button
     container.querySelector('#btnCopyPrompt')?.addEventListener('click', (e) => {
       const role = document.getElementById('inpRole')?.value.trim() || '';
       const task = document.getElementById('inpTask')?.value.trim() || '';
@@ -2148,20 +2110,38 @@ SLIDE 5: KESIMPULAN & PENUTUP
       }
 
       const fullPrompt = `Sebagai ${role || '(Role)'}, tugasmu adalah ${task || '(Task)'}.\n\nKonteks & Batasan:\n${context || '(Context)'}\n\nFormat Output:\n${format || '(Format)'}`;
-      this.copyToClipboard(fullPrompt, 'Prompt Formula R-T-C-F berhasil disalin!', e.currentTarget);
+      this.copyToClipboard(fullPrompt, 'Formula prompt R-T-C-F dasar berhasil disalin!', e.currentTarget);
     });
 
-    // 7. Copy Console Output button
-    container.querySelector('#btnCopyConsole')?.addEventListener('click', (e) => {
+    // 5. Copy Generated Prompt (Console header button & Big bottom button)
+    const handleCopyGenerated = (e) => {
       const consoleEl = document.getElementById('consoleText');
       if (!consoleEl) return;
-      const rawText = consoleEl.innerText || consoleEl.textContent;
-      if (rawText.includes('Ketik pilar formulamu')) {
-        this.showToast('Jalankan Gemini AI terlebih dahulu untuk menyalin hasil!', '⚠️');
+      const finalPromptEl = document.getElementById('finalPromptText');
+      
+      let textToCopy = '';
+      if (finalPromptEl) {
+        textToCopy = finalPromptEl.innerText || finalPromptEl.textContent;
+      } else {
+        const rawText = consoleEl.innerText || consoleEl.textContent;
+        if (rawText.includes('Lengkapi pilar formulamu') || rawText.includes('sedang menyusun prompt')) {
+          this.showToast('Optimalkan formula terlebih dahulu sebelum menyalin!', '⚠️');
+          return;
+        }
+        textToCopy = rawText.trim();
+      }
+
+      if (!textToCopy) {
+        this.showToast('Prompt belum tersedia untuk disalin!', '⚠️');
         return;
       }
-      this.copyToClipboard(rawText.trim(), 'Seluruh hasil respon Gemini AI berhasil disalin!', e.currentTarget);
-    });
+
+      this.copyToClipboard(textToCopy.trim(), 'Prompt hasil optimasi berhasil disalin ke clipboard!', e.currentTarget);
+      this.showRobotDialogue("Prompt formula R-T-C-F siap pakai telah disalin! Kamu bisa langsung menggunakannya di ChatGPT, Gemini, atau Claude.");
+    };
+
+    container.querySelector('#btnCopyConsole')?.addEventListener('click', handleCopyGenerated);
+    container.querySelector('#btnCopyGeneratedPrompt')?.addEventListener('click', handleCopyGenerated);
 
     this.updateStudioMeter();
   }
@@ -2196,7 +2176,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
     }
   }
 
-  async executeGeminiRequest(action) {
+  async executeGeminiRequest() {
     const role = document.getElementById('inpRole')?.value.trim() || '';
     const task = document.getElementById('inpTask')?.value.trim() || '';
     const context = document.getElementById('inpContext')?.value.trim() || '';
@@ -2210,30 +2190,23 @@ SLIDE 5: KESIMPULAN & PENUTUP
       return;
     }
 
-    const curCat = this.aiCategories[this.currentAiCategory];
     const consoleText = document.getElementById('consoleText');
     if (!consoleText) return;
 
     if (window.audioMgr) window.audioMgr.whoosh();
     if (window.robot) window.robot.setState('EXPLAIN', 6000);
 
-    const actionTitle = (action === 'optimize') 
-      ? 'Google Gemini AI sedang mengoptimalkan formulamu...' 
-      : 'Simulator AI sedang mengeksekusi prompt...';
-
     consoleText.innerHTML = `
       <div class="gemini-loading-anim">
         <div class="gemini-spinner"></div>
         <div>
-          <div style="font-weight:700; color:#38BDF8;">⚡ ${actionTitle}</div>
-          <div style="font-size:11px; color:#94A3B8; margin-top:3px;">Robot mentor sedang memproses analisis R-T-C-F tingkat industri.</div>
+          <div style="font-weight:700; color:#38BDF8;">⚡ Google Gemini AI sedang menyusun prompt...</div>
+          <div style="font-size:11px; color:#94A3B8; margin-top:3px;">Mempersatukan pilar R-T-C-F menjadi satu prompt profesional berstandar industri.</div>
         </div>
       </div>
     `;
 
     const payload = {
-      action,
-      category: curCat,
       role,
       task,
       context,
@@ -2273,25 +2246,29 @@ SLIDE 5: KESIMPULAN & PENUTUP
 
       // 3. Fallback: Intelligent educational simulation if completely offline without API key
       if (!resultText) {
-        resultText = this.getOfflineSmartSimulation(action, curCat, role, task, context, format);
+        resultText = this.getOfflineSmartSimulation(role, task, context, format);
         usedSource = 'Simulator Edukasi R-T-C-F';
       }
 
-      const formattedHtml = this.formatGeminiMarkdown(resultText);
+      // Clean wrapping markdown code blocks if the AI model enclosed the prompt in ```
+      let cleanPrompt = resultText.trim();
+      if (cleanPrompt.startsWith('```') && cleanPrompt.endsWith('```')) {
+        cleanPrompt = cleanPrompt.replace(/^```[a-zA-Z]*\n?/, '').replace(/\n?```$/, '').trim();
+      }
 
       consoleText.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-size:10px; color:#38BDF8; font-weight:800; border-bottom:1px solid rgba(56, 189, 248, 0.2); padding-bottom:5px;">
-          <span>⚡ MESIN: ${usedSource.toUpperCase()}</span>
-          <span>MODALITAS: ${curCat.name.toUpperCase()}</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:10.5px; color:#38BDF8; font-weight:800; border-bottom:1px solid rgba(56, 189, 248, 0.2); padding-bottom:8px;">
+          <span>⚡ SUMBER: ${usedSource.toUpperCase()}</span>
+          <span style="color:#4ADE80;">✓ SIAP DISALIN & DIGUNAKAN</span>
         </div>
-        <div class="gemini-markdown-view">${formattedHtml}</div>
+        <div id="finalPromptText" style="color:#F8FAFC; line-height:1.75; font-size:13.5px; white-space:pre-wrap; font-family:'Fira Code', 'Segoe UI', monospace, sans-serif;">${this.escapeHtml(cleanPrompt)}</div>
       `;
 
       if (window.audioMgr) window.audioMgr.successChime();
       if (window.robot) window.robot.setState('CHEER', 3500);
 
-      this.showRobotDialogue(`Luar biasa! Prompt ${curCat.name} berhasil diproses oleh Gemini AI dengan formula R-T-C-F presisi!`);
-      this.showToast('Respon Gemini AI berhasil disintesis!', '⚡');
+      this.showRobotDialogue("Luar biasa! Prompt R-T-C-F berhasil disatukan dan siap digunakan. Klik tombol 'Salin Prompt' di bawah!");
+      this.showToast('Prompt berhasil dioptimalkan!', '⚡');
 
       // Update Sub-Unit 3 progress
       this.state.progress.sub3 = true;
@@ -2318,36 +2295,19 @@ SLIDE 5: KESIMPULAN & PENUTUP
   }
 
   async callGeminiDirect(payload) {
-    const { action, category, role, task, context: promptContext, format } = payload;
-    const catName = category?.name || 'Umum';
-    const catTools = category?.tools || 'AI Generatif';
+    const { role, task, context: promptContext, format } = payload;
 
-    let prompt = '';
-    if (action === 'optimize') {
-      prompt = `Kamu adalah Master Prompt Engineer Kurikulum Vokasi SMK Koding & Kecerdasan Artifisial (KKA) Fase F.
-Tugasmu: Analisis dan optimalkan formula R-T-C-F berikut untuk jenis AI "${catName}" (${catTools}):
-- Role: ${role || '-'}
-- Task: ${task || '-'}
-- Context: ${promptContext || '-'}
-- Format: ${format || '-'}
+    const prompt = `Kamu adalah Master Prompt Engineer profesional bidang Rekayasa Perangkat Lunak dan Kecerdasan Artifisial (KKA Fase F).
+Tugasmu: Satukan dan sempurnakan input formula R-T-C-F (Role, Task, Context, Format) berikut menjadi SATU PROMPT FINAL YANG BAIK, TERSTRUKTUR, DAN SIAP PAKAI SECARA LANGSUNG:
+- Role: ${role || 'Spesialis Perangkat Lunak & AI'}
+- Task: ${task || 'Selesaikan tugas secara presisi'}
+- Context & Constraints: ${promptContext || 'Standar industri terbaik'}
+- Format: ${format || 'Terstruktur rapi'}
 
-Format jawaban WAJIB menggunakan struktur berikut secara rapi:
-### 1. 🔍 Evaluasi Formula R-T-C-F
-Ulas kekuatan pilar input siswa.
-
-### 2. ⚡ Formula Prompt Teroptimasi (Siap Pakai)
-Tuliskan prompt teroptimasi lengkap dan presisi yang siap disalin dan dijalankan.
-
-### 3. 🎯 3 Poin Peningkatan Teknis
-Jelaskan perbaikan parameter yang dilakukan.
-Gunakan bahasa Indonesia edukatif dan profesional.`;
-    } else {
-      prompt = `Bertindaklah sebagai AI Generatif ${catName} (${catTools}).
-Jalankan instruksi berbasis formula R-T-C-F berikut dan tampilkan hasil akhirnya secara langsung:
-Sebagai ${role || 'Asisten Ahli'}, tugasmu adalah: ${task || 'Selesaikan tugas'}.
-Konteks & Batasan: ${promptContext || 'Standar industri'}.
-Format Output: ${format || 'Terstruktur rapi'}.`;
-    }
+ATURAN WAJIB & MUTLAK:
+- Berikan HANYA teks prompt final yang sudah jadi dan sempurna.
+- JANGAN sertakan evaluasi, pengantar, salam, analisis, atau penutup apapun.
+- JANGAN gunakan heading seperti "### 1. Evaluasi" atau "### 2. Formula".`;
 
     const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash'];
     let lastError = null;
@@ -2375,28 +2335,32 @@ Format Output: ${format || 'Terstruktur rapi'}.`;
     throw lastError || new Error('Gagal memanggil Gemini API');
   }
 
-  getOfflineSmartSimulation(action, curCat, role, task, context, format) {
-    if (action === 'optimize') {
-      return `### 1. 🔍 Evaluasi Formula R-T-C-F
-- **Role:** Menetapkan identitas "${role || 'Asisten Ahli'}".
-- **Task:** Menugaskan "${task || 'Pengerjaan modul'}".
-- **Context:** Menetapkan batasan "${context || 'Standar umum'}".
-- **Format:** Mengatur bentuk output "${format || 'Terstruktur'}".
+  getOfflineSmartSimulation(role, task, context, format) {
+    const r = role || 'Senior Software Engineer & AI Specialist';
+    const t = task || 'rancang arsitektur dan implementasi solusi teknis secara komprehensif';
+    const c = context || 'Gunakan standar industri terbaik, ikuti prinsip clean code, tangani seluruh kemungkinan edge cases, dan terapkan praktik keamanan data';
+    const f = format || 'Sajikan penjelasan terstruktur disertai implementasi kode lengkap yang bersih dan panduan pengujian sistematis';
 
-### 2. ⚡ Formula Prompt Teroptimasi (Production-Grade)
-"Sebagai ${role || 'Spesialis Ahli'}, tugas utamamu adalah ${task || 'melaksanakan instruksi secara komprehensif'}.
-Konteks & Batasan Operasional: ${context || 'Gunakan standar industri terbaik, bahasa baku, dan minimalkan halusinasi'}.
-Format Luaran: ${format || 'Sajikan secara sistematis dengan poin-poin terstruktur'}. Pastikan setiap detail diverifikasi secara akurat."
+    return `Sebagai ${r}, tugas utamamu adalah: ${t}.
 
-### 3. 🎯 3 Poin Peningkatan Teknis
-1. **Penegasan Persona:** Mengarahkan ruang probabilitas model ke standar kejuruan yang lebih spesifik.
-2. **Konteks Anti-Halusinasi:** Membatasi model agar hanya berpatokan pada batasan data yang diberikan.
-3. **Arsitektur Luaran Presisi:** Memperjelas hierarki keluaran agar mudah disalin ke dokumen kerja nyata.
+Konteks Operasional & Batasan Kualitas:
+- ${c}
+- Terapkan alur pemikiran analitis langkah demi langkah (chain-of-thought) untuk memverifikasi setiap asumsi teknis.
+- Pastikan solusi yang diberikan efisien, minim halusinasi, dan sesuai dengan standar kejuruan terkini.
 
-*(💡 Tips: Hubungkan Google Gemini API Key melalui tombol di atas untuk mendapatkan optimasi AI langsung secara daring!)*`;
-    } else {
-      return curCat.simulate(role || 'Pakar Ahli', task || 'Eksekusi tugas', context || 'Standar industri', format || 'Poin rapi');
-    }
+Format Output yang Diwajibkan:
+- ${f}
+- Berikan dokumentasi dan penjelasan yang jelas pada setiap komponen utama.`;
+  }
+
+  escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   formatGeminiMarkdown(md) {

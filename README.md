@@ -22,11 +22,10 @@ Media Pembelajaran Interaktif **Koding dan Kecerdasan Artifisial (KKA)** untuk j
    - Sistem skor 100 poin (20 poin/kasus) dan penerbitan resep prompt sembuh.
 
 4. **Sub-Unit 3: RoboPrompt Studio (Powered by Google Gemini AI)**:
-   - **Formula Builder Murni**: Pengguna memasukkan kata atau kalimat sendiri dari awal ke dalam slot Role, Task, Context, Format tanpa template preset.
-   - **Integrasi Langsung Google Gemini AI**:
-     - *⚡ Optimalkan dengan Gemini AI*: Gemini menganalisis pilar R-T-C-F siswa, menghasilkan versi teroptimasi kelas industri, dan memberikan 3 poin penjelasan teknis.
-     - *🚀 Uji Eksekusi di Simulator AI*: Gemini bertindak sebagai model AI yang dituju dan menjalankan instruksi prompt secara nyata.
-   - 5 Modalitas AI Generatif: Dokumen & Teks, Foto & Grafis, Audio & Musik, Kode & Perangkat Lunak, serta Slide & Visual.
+   - **Formula Builder Murni**: Pengguna memasukkan kata atau kalimat sendiri ke dalam slot Role, Task, Context, Format (R-T-C-F) berstandar industri vokasi PPLG.
+   - **Optimasi Cerdas Google Gemini AI**:
+     - *⚡ Optimalkan dengan Gemini AI*: Gemini menyatukan dan menyempurnakan keempat pilar R-T-C-F siswa menjadi satu teks prompt final yang terstruktur, kohesif, dan siap pakai secara langsung pada model AI.
+     - *📋 Salin Prompt*: Satu klik untuk menyalin prompt final hasil generasi AI ke clipboard untuk langsung digunakan di platform AI nyata (ChatGPT, Gemini, Claude, dsb).
 
 5. **Sub-Unit 4: Evaluasi & Kuis Cerdas (25 Soal & Ambang Batas Skor 80)**:
    - 25 butir soal studi kasus CBT (Computer Based Test) berbobot 4 poin per soal (maksimal 100).
