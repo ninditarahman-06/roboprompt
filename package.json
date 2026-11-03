@@ -1,0 +1,23 @@
+{
+  "name": "roboprompt-kka",
+  "version": "1.0.0",
+  "description": "Media Pembelajaran Interaktif Koding dan Kecerdasan Artifisial (KKA) SMK Fase F berbasis Formula R-T-C-F dengan Mentor 3D Robot & Google Gemini AI",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx netlify dev",
+    "build": "echo 'Build OK'"
+  },
+  "keywords": [
+    "roboprompt",
+    "gemini-ai",
+    "smk",
+    "vokasi",
+    "prompt-engineering",
+    "threejs",
+    "rtcf"
+  ],
+  "author": "Kemendikdasmen / SMK Vokasi",
+  "license": "MIT"
+}
+

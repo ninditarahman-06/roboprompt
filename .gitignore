@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+.npm/
+
+# Netlify local environment
+.netlify/
+
+# Environment secrets & keys
+.env
+.env.local
+.env.*.local
+
+# Operating System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary logs & test artifacts
+scratch/
+*.log
+
