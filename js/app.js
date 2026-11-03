@@ -2069,12 +2069,6 @@ SLIDE 5: KESIMPULAN & PENUTUP
           </div>
 
           <div class="console-box" id="consoleOutput">
-            <div class="console-header">
-              <span>// HASIL PROMPT TERSTRUKTUR (FORMULA R-T-C-F)</span>
-              <button class="btn-copy-console" id="btnCopyConsole" title="Salin prompt hasil optimasi">
-                📋 Salin
-              </button>
-            </div>
             <div id="consoleText" style="color:#94A3B8; font-size:13px; line-height:1.6;">Lengkapi pilar formulamu di samping, lalu klik tombol <strong>"⚡ Optimalkan dengan Gemini AI"</strong> untuk menyatukan dan menghasilkan prompt siap pakai yang sempurna...</div>
           </div>
 
@@ -2143,7 +2137,6 @@ SLIDE 5: KESIMPULAN & PENUTUP
       this.showRobotDialogue("Prompt formula R-T-C-F siap pakai telah disalin! Kamu bisa langsung menggunakannya di ChatGPT, Gemini, atau Claude.");
     };
 
-    container.querySelector('#btnCopyConsole')?.addEventListener('click', handleCopyGenerated);
     container.querySelector('#btnCopyGeneratedPrompt')?.addEventListener('click', handleCopyGenerated);
 
     this.updateStudioMeter();
@@ -2260,10 +2253,6 @@ SLIDE 5: KESIMPULAN & PENUTUP
       }
 
       consoleText.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:10.5px; color:#38BDF8; font-weight:800; border-bottom:1px solid rgba(56, 189, 248, 0.2); padding-bottom:8px;">
-          <span>⚡ SUMBER: ${usedSource.toUpperCase()}</span>
-          <span style="color:#4ADE80;">✓ SIAP DISALIN & DIGUNAKAN</span>
-        </div>
         <div id="finalPromptText" style="color:#F8FAFC; line-height:1.75; font-size:13.5px; white-space:pre-wrap; font-family:'Fira Code', 'Segoe UI', monospace, sans-serif;">${this.escapeHtml(cleanPrompt)}</div>
       `;
 
