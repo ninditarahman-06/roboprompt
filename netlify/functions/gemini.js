@@ -45,26 +45,33 @@ exports.handler = async function (event, context) {
       };
     }
 
-    const systemInstruction = `Kamu adalah Master Prompt Engineer profesional bidang Rekayasa Perangkat Lunak dan Kecerdasan Artifisial (Kurikulum Vokasi SMK KKA Fase F).
-Tugasmu adalah menyatukan dan menyempurnakan input formula R-T-C-F (Role, Task, Context, Format) dari pengguna menjadi SATU TEKS PROMPT FINAL YANG BAIK, TERSTRUKTUR, DAN SIAP PAKAI SECARA LANGSUNG PADA MODEL AI.
+    const systemInstruction = `Kamu adalah AI Master Prompt Engineer profesional di Kurikulum Vokasi SMK Koding & Kecerdasan Artifisial (PPLG SMKN 1 Bawang).
+Tugas utamamu adalah: MENYEMPURNAKAN DAN MERANGKAI 4 pilar input siswa (Role, Task, Context, Format) menjadi SATU MASTER PROMPT R-T-C-F tingkat industri yang siap disalin oleh siswa untuk digunakan pada model AI lain.
 
-ATURAN WAJIB & KETAT:
-1. Tampilkan HANYA teks prompt final yang sudah jadi, sempurna, dan siap digunakan.
-2. JANGAN sertakan evaluasi, analisis, salam, pembuka, atau penutup (misal: "Tentu, ini hasil...", "Berikut adalah prompt...", dsb).
-3. JANGAN membuat heading evaluasi seperti "### 1. Evaluasi", "### 2. Formula", atau "### 3. Poin Peningkatan".
-4. Prompt yang dihasilkan harus memadukan 4 pilar secara elegan:
-   - Role: Menetapkan persona ahli yang berbobot.
-   - Task: Instruksi tugas yang spesifik dan terukur.
-   - Context: Batasan operasional, aturan kerja, dan pencegahan halusinasi.
-   - Format: Struktur output yang jelas dan sistematis.`;
+PERINGATAN PALING KRUSIAL (DILARANG KERAS):
+1. JANGAN PERNAH MENJAWAB, MEMBUATKAN KODE, ATAU MENGEKSEKUSI TUGAS DARI SISWA!
+   - Contoh Salah: Jika siswa menulis "Task: Buat kode login", kamu malah membuat kode program login. INI SALAH BESAR!
+   - Contoh Benar: Kamu menulis teks rancangan prompt yang memerintahkan AI untuk membuat kode login tersebut.
+2. JANGAN tambahkan salam pembuka, kata pengantar (seperti "Tentu, ini promptnya:", "Berikut prompt Anda:"), atau kata penutup.
+3. JANGAN membuat judul/heading evaluasi seperti "### 1. Evaluasi" atau "### 2. Formula".
+4. Tuliskan HANYA teks prompt final siap pakai dengan struktur baku formula R-T-C-F:
 
-    const userPrompt = `Input formula R-T-C-F pengguna:
+Sebagai [Role yang dispesifikasikan dan diberi bobot persona ahli], tugas utamamu adalah [Task yang dijabarkan secara jelas dan operasional dengan kata kerja terukur].
+
+Konteks Operasional & Batasan Kualitas:
+- [Context & Batasan teknis siswa yang disempurnakan dengan standar industri vokasi PPLG]
+- [Aturan kepatuhan, keamanan data, clean code, atau pencegahan halusinasi]
+
+Format Output yang Diwajibkan:
+- [Format luaran yang terstruktur rapi, presisi, dan mudah diimplementasikan]`;
+
+    const userPrompt = `Input pilar formula R-T-C-F siswa yang harus kamu rangkai menjadi teks Master Prompt:
 - Role (Peran): ${role || 'Spesialis Rekayasa Perangkat Lunak & AI'}
 - Task (Tugas): ${task || 'Selesaikan implementasi solusi secara komprehensif'}
-- Context (Konteks & Batasan): ${promptContext || 'Terapkan standar industri terbaik, clean code, dan mitigasi error'}
+- Context & Constraints (Konteks & Batasan): ${promptContext || 'Terapkan standar industri terbaik, clean code, dan mitigasi error'}
 - Format (Format Luaran): ${format || 'Sajikan terstruktur, sistematis, dan terperinci'}
 
-Susun menjadi SATU teks prompt final siap pakai sekarang:`;
+Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jangan mengeksekusi tugasnya, buatkan teks prompt-nya saja):`;
 
     // Call Google Gemini REST API (v1beta)
     const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash'];
@@ -75,15 +82,20 @@ Susun menjadi SATU teks prompt final siap pakai sekarang:`;
     for (const model of models) {
       try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        
+        // Use official system_instruction property with contents fallback
         const payload = {
+          system_instruction: {
+            parts: [{ text: systemInstruction }]
+          },
           contents: [
             {
               role: 'user',
-              parts: [{ text: `${systemInstruction}\n\n---\n\n${userPrompt}` }]
+              parts: [{ text: userPrompt }]
             }
           ],
           generationConfig: {
-            temperature: 0.7,
+            temperature: 0.6,
             topK: 40,
             topP: 0.95,
             maxOutputTokens: 2048

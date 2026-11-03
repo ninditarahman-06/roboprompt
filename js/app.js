@@ -2212,6 +2212,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
 
     let resultText = '';
     let usedSource = 'Netlify Serverless';
+    let netlifyErrorMsg = '';
 
     try {
       // 1. Try Netlify Functions endpoint first
@@ -2222,28 +2223,38 @@ SLIDE 5: KESIMPULAN & PENUTUP
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-      } catch (err) {
-        res = null;
-      }
 
-      if (res && res.ok) {
-        const json = await res.json();
-        if (json.success && json.text) {
-          resultText = json.text;
-          usedSource = `Google Gemini AI (${json.model || 'cloud'})`;
+        if (res) {
+          const json = await res.json().catch(() => ({}));
+          if (res.ok && json.success && json.text) {
+            resultText = json.text;
+            usedSource = `Google Gemini AI (${json.model || 'cloud'})`;
+          } else {
+            netlifyErrorMsg = json.message || `Status ${res.status}`;
+          }
         }
+      } catch (err) {
+        netlifyErrorMsg = err.message || 'Koneksi Netlify Functions gagal';
+        res = null;
       }
 
       // 2. Direct client-side call if local API key is present & Netlify function unreachable
       if (!resultText && this.geminiApiKey) {
-        resultText = await this.callGeminiDirect(payload);
-        usedSource = 'Google Gemini AI (Direct API)';
+        try {
+          resultText = await this.callGeminiDirect(payload);
+          usedSource = 'Google Gemini AI (Direct API)';
+          netlifyErrorMsg = '';
+        } catch (err) {
+          console.warn('Direct Gemini call failed:', err);
+        }
       }
 
       // 3. Fallback: Intelligent educational simulation if completely offline without API key
+      let isFallback = false;
       if (!resultText) {
         resultText = this.getOfflineSmartSimulation(role, task, context, format);
         usedSource = 'Simulator Edukasi R-T-C-F';
+        isFallback = true;
       }
 
       // Clean wrapping markdown code blocks if the AI model enclosed the prompt in ```
@@ -2256,11 +2267,17 @@ SLIDE 5: KESIMPULAN & PENUTUP
         <div id="finalPromptText" style="color:#F8FAFC; line-height:1.75; font-size:13.5px; white-space:pre-wrap; font-family:'Fira Code', 'Segoe UI', monospace, sans-serif;">${this.escapeHtml(cleanPrompt)}</div>
       `;
 
-      if (window.audioMgr) window.audioMgr.successChime();
-      if (window.robot) window.robot.setState('CHEER', 3500);
-
-      this.showRobotDialogue("Luar biasa! Prompt R-T-C-F berhasil disatukan dan siap digunakan. Klik tombol 'Salin Prompt' di bawah!");
-      this.showToast('Prompt berhasil dioptimalkan!', '⚡');
+      if (isFallback) {
+        if (window.audioMgr) window.audioMgr.click();
+        if (window.robot) window.robot.setState('EXPLAIN', 4000);
+        this.showToast('⚠️ Netlify belum membaca API Key. Menampilkan formula simulasi.', '⚠️');
+        this.showRobotDialogue("Perhatian: Netlify belum membaca GEMINI_API_KEY (" + (netlifyErrorMsg || 'belum aktif') + "). Hasil di atas adalah formula simulasi offline. Pastikan variabel GEMINI_API_KEY sudah disetel di Netlify dan lakukan 'Clear cache and deploy'!");
+      } else {
+        if (window.audioMgr) window.audioMgr.successChime();
+        if (window.robot) window.robot.setState('CHEER', 3500);
+        this.showRobotDialogue("Luar biasa! Prompt R-T-C-F berhasil disempurnakan oleh Gemini AI dan siap digunakan. Klik tombol 'Salin Prompt' di bawah!");
+        this.showToast('Prompt berhasil dioptimalkan oleh Gemini AI!', '⚡');
+      }
 
       // Update Sub-Unit 3 progress
       this.state.progress.sub3 = true;
@@ -2289,17 +2306,33 @@ SLIDE 5: KESIMPULAN & PENUTUP
   async callGeminiDirect(payload) {
     const { role, task, context: promptContext, format } = payload;
 
-    const prompt = `Kamu adalah Master Prompt Engineer profesional bidang Rekayasa Perangkat Lunak dan Kecerdasan Artifisial (KKA Fase F).
-Tugasmu: Satukan dan sempurnakan input formula R-T-C-F (Role, Task, Context, Format) berikut menjadi SATU PROMPT FINAL YANG BAIK, TERSTRUKTUR, DAN SIAP PAKAI SECARA LANGSUNG:
-- Role: ${role || 'Spesialis Perangkat Lunak & AI'}
-- Task: ${task || 'Selesaikan tugas secara presisi'}
-- Context & Constraints: ${promptContext || 'Standar industri terbaik'}
-- Format: ${format || 'Terstruktur rapi'}
+    const systemInstruction = `Kamu adalah AI Master Prompt Engineer profesional di Kurikulum Vokasi SMK Koding & Kecerdasan Artifisial (PPLG SMKN 1 Bawang).
+Tugas utamamu adalah: MENYEMPURNAKAN DAN MERANGKAI 4 pilar input siswa (Role, Task, Context, Format) menjadi SATU MASTER PROMPT R-T-C-F tingkat industri yang siap disalin oleh siswa untuk digunakan pada model AI lain.
 
-ATURAN WAJIB & MUTLAK:
-- Berikan HANYA teks prompt final yang sudah jadi dan sempurna.
-- JANGAN sertakan evaluasi, pengantar, salam, analisis, atau penutup apapun.
-- JANGAN gunakan heading seperti "### 1. Evaluasi" atau "### 2. Formula".`;
+PERINGATAN PALING KRUSIAL (DILARANG KERAS):
+1. JANGAN PERNAH MENJAWAB, MEMBUATKAN KODE, ATAU MENGEKSEKUSI TUGAS DARI SISWA!
+   - Contoh Salah: Jika siswa menulis "Task: Buat kode login", kamu malah membuat kode program login. INI SALAH BESAR!
+   - Contoh Benar: Kamu menulis teks rancangan prompt yang memerintahkan AI untuk membuat kode login tersebut.
+2. JANGAN tambahkan salam pembuka, kata pengantar (seperti "Tentu, ini promptnya:", "Berikut prompt Anda:"), atau kata penutup.
+3. JANGAN membuat judul/heading evaluasi seperti "### 1. Evaluasi" atau "### 2. Formula".
+4. Tuliskan HANYA teks prompt final siap pakai dengan struktur baku formula R-T-C-F:
+
+Sebagai [Role yang dispesifikasikan dan diberi bobot persona ahli], tugas utamamu adalah [Task yang dijabarkan secara jelas dan operasional dengan kata kerja terukur].
+
+Konteks Operasional & Batasan Kualitas:
+- [Context & Batasan teknis siswa yang disempurnakan dengan standar industri vokasi PPLG]
+- [Aturan kepatuhan, keamanan data, clean code, atau pencegahan halusinasi]
+
+Format Output yang Diwajibkan:
+- [Format luaran yang terstruktur rapi, presisi, dan mudah diimplementasikan]`;
+
+    const userPrompt = `Input pilar formula R-T-C-F siswa yang harus kamu rangkai menjadi teks Master Prompt:
+- Role (Peran): ${role || 'Spesialis Rekayasa Perangkat Lunak & AI'}
+- Task (Tugas): ${task || 'Selesaikan implementasi solusi secara komprehensif'}
+- Context & Constraints (Konteks & Batasan): ${promptContext || 'Terapkan standar industri terbaik, clean code, dan mitigasi error'}
+- Format (Format Luaran): ${format || 'Sajikan terstruktur, sistematis, dan terperinci'}
+
+Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jangan mengeksekusi tugasnya, buatkan teks prompt-nya saja):`;
 
     const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash'];
     let lastError = null;
@@ -2311,8 +2344,11 @@ ATURAN WAJIB & MUTLAK:
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+            system_instruction: {
+              parts: [{ text: systemInstruction }]
+            },
+            contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+            generationConfig: { temperature: 0.6, maxOutputTokens: 2048 }
           })
         });
 
