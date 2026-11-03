@@ -2206,7 +2206,7 @@ Konteks & Batasan: ${promptContext || 'Standar industri'}.
 Format Output: ${format || 'Terstruktur rapi'}.`;
     }
 
-    const models = ['gemini-2.5-flash', 'gemini-1.5-flash'];
+    const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash'];
     let lastError = null;
 
     for (const m of models) {

@@ -87,7 +87,7 @@ Jalankan instruksi berikut yang dirancang dengan formula R-T-C-F dan berikan lua
     }
 
     // Call Google Gemini REST API (v1beta)
-    const models = ['gemini-2.5-flash', 'gemini-1.5-flash'];
+    const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash'];
     let lastError = null;
     let resultText = '';
     let usedModel = '';
