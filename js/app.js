@@ -30,7 +30,9 @@ class RoboPromptApp {
 
     // Sub-Unit 2 Game State
     this.doctorCaseIndex = 0;
-    this.doctorSlots = { role: null, task: null, context: null, format: null };
+    this.doctorSlots = [null, null, null, null];
+    this.doctorSlotStatus = ['neutral', 'neutral', 'neutral', 'neutral'];
+    this.activeDoctorSlotIndex = 0;
 
     // Sub-Unit 4 Quiz State
     this.quizIndex = 0;
@@ -1521,6 +1523,51 @@ SLIDE 5: KESIMPULAN & PENUTUP
     ];
   }
 
+  // Helper: Shuffle cards per case (cached per case id so order doesn't jump unexpectedly)
+  getShuffledCaseCards(currentCase) {
+    if (!this._caseCardsCache) this._caseCardsCache = {};
+    if (!this._caseCardsCache[currentCase.id]) {
+      const copy = currentCase.cards.map((c, i) => ({ ...c, originalIdx: i }));
+      // Fisher-Yates shuffle
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      this._caseCardsCache[currentCase.id] = copy;
+    }
+    return this._caseCardsCache[currentCase.id];
+  }
+
+  isCardUsed(card) {
+    if (!Array.isArray(this.doctorSlots)) return false;
+    return this.doctorSlots.some(s => s && s.text === card.text);
+  }
+
+  switchDoctorCase(caseIndex) {
+    const cases = this.getDoctorCases();
+    if (caseIndex < 0 || caseIndex >= cases.length) return;
+    this.doctorCaseIndex = caseIndex;
+    const currentCase = cases[caseIndex];
+
+    if (this.state.doctorSolvedCases[caseIndex]) {
+      // Pre-fill with the winning RTCF sequence
+      this.doctorSlots = [
+        currentCase.cards.find(c => c.type === 'role') || null,
+        currentCase.cards.find(c => c.type === 'task') || null,
+        currentCase.cards.find(c => c.type === 'context') || null,
+        currentCase.cards.find(c => c.type === 'format') || null
+      ];
+      this.doctorSlotStatus = ['correct', 'correct', 'correct', 'correct'];
+    } else {
+      this.doctorSlots = [null, null, null, null];
+      this.doctorSlotStatus = ['neutral', 'neutral', 'neutral', 'neutral'];
+    }
+    this.activeDoctorSlotIndex = 0;
+
+    if (window.audioMgr) window.audioMgr.whoosh();
+    this.renderSubUnit2(document.getElementById('viewContainer'));
+  }
+
   renderSubUnit2(container) {
     const cases = this.getDoctorCases();
     if (this.doctorCaseIndex === undefined || this.doctorCaseIndex < 0 || this.doctorCaseIndex >= cases.length) {
@@ -1529,16 +1576,35 @@ SLIDE 5: KESIMPULAN & PENUTUP
     const currentCase = cases[this.doctorCaseIndex];
     const isCurrentCaseSolved = !!this.state.doctorSolvedCases[this.doctorCaseIndex];
 
-    const filledCount = Object.values(this.doctorSlots).filter(Boolean).length;
+    if (!Array.isArray(this.doctorSlots) || this.doctorSlots.length !== 4) {
+      this.doctorSlots = [null, null, null, null];
+    }
+    if (!Array.isArray(this.doctorSlotStatus) || this.doctorSlotStatus.length !== 4) {
+      this.doctorSlotStatus = ['neutral', 'neutral', 'neutral', 'neutral'];
+    }
+
+    // If solved and empty, pre-fill with winning sequence
+    if (isCurrentCaseSolved && this.doctorSlots.every(s => s === null)) {
+      this.doctorSlots = [
+        currentCase.cards.find(c => c.type === 'role') || null,
+        currentCase.cards.find(c => c.type === 'task') || null,
+        currentCase.cards.find(c => c.type === 'context') || null,
+        currentCase.cards.find(c => c.type === 'format') || null
+      ];
+      this.doctorSlotStatus = ['correct', 'correct', 'correct', 'correct'];
+    }
+
     const totalSolved = Object.keys(this.state.doctorSolvedCases).length;
     const totalScore = totalSolved * 10;
     this.state.minigameScore = totalScore;
 
+    const shuffledCards = this.getShuffledCaseCards(currentCase);
+
     container.innerHTML = `
       <div class="section-header">
-        <div class="section-tag">🩺 Sub-Unit 2 · Mini Game Edukasi Drag & Drop</div>
+        <div class="section-tag">🩺 Sub-Unit 2 · Mini Game Edukasi Susun Urutan Prompt</div>
         <h2 class="section-title">Klinik "Prompt Doctor": 10 Studi Kasus Industri</h2>
-        <p class="section-desc">Selamatkan 10 pasien prompt yang sakit parah! Tarik (*drag & drop*) atau klik kartu formula yang tepat ke slot Role, Task, Context, dan Format.</p>
+        <p class="section-desc">Susun kepingan formula menjadi prompt terstruktur yang utuh! Baca dan sesuaikan urutan 4 pilar standar: <strong>Role ➔ Task ➔ Context ➔ Format</strong>.</p>
       </div>
 
       <!-- 10 Case Navigation Bar -->
@@ -1584,39 +1650,73 @@ SLIDE 5: KESIMPULAN & PENUTUP
           </div>
         </div>
 
-        <!-- 4 Target Diagnosis Slots with Drag and Drop -->
-        <div class="slots-grid" id="slotsGrid">
-          <div class="formula-slot ${this.doctorSlots.role ? 'filled' : ''}" data-slot="role" title="Klik untuk membatalkan kartu">
-            <span class="slot-tag">Slot 1 · Role (Peran)</span>
-            ${this.doctorSlots.role 
-              ? `<div class="slot-content-text">${this.doctorSlots.role.text}</div>` 
-              : `<span class="slot-placeholder">Tarik / Klik kartu Role di sini</span>`}
+        <!-- 4 Sequential Target Assembly Slots -->
+        <div class="slots-sequence-wrapper">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:12px; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:6px;">
+              🎯 Area Perakitan Susunan Prompt:
+            </span>
+            <span style="font-size:11px; font-weight:700; color:var(--tech);">
+              Urutan Standar: Role ➔ Task ➔ Context ➔ Format
+            </span>
           </div>
 
-          <div class="formula-slot ${this.doctorSlots.task ? 'filled' : ''}" data-slot="task" title="Klik untuk membatalkan kartu">
-            <span class="slot-tag">Slot 2 · Task (Tugas)</span>
-            ${this.doctorSlots.task 
-              ? `<div class="slot-content-text">${this.doctorSlots.task.text}</div>` 
-              : `<span class="slot-placeholder">Tarik / Klik kartu Task di sini</span>`}
+          <div class="slots-grid" id="slotsGrid">
+            ${[0, 1, 2, 3].map(slotIdx => {
+              const card = this.doctorSlots[slotIdx];
+              const status = this.doctorSlotStatus[slotIdx];
+              const isActiveTarget = this.activeDoctorSlotIndex === slotIdx && !card;
+              const pillarHints = ['Pilar 1 · Role', 'Pilar 2 · Task', 'Pilar 3 · Context', 'Pilar 4 · Format'];
+              const pillarSubs = ['Siapa Peran AI', 'Instruksi Tugas', 'Batasan & Skenario', 'Bentuk Luaran'];
+
+              return `
+                <div class="formula-slot ${card ? 'filled' : ''} ${status !== 'neutral' ? status : ''} ${isActiveTarget ? 'active-target' : ''}" 
+                     data-slot="${slotIdx}"
+                     draggable="${!!card}"
+                     title="${card ? 'Tarik untuk menukar atau gunakan tombol geser' : 'Klik untuk memilih slot target'}">
+                  
+                  <div class="slot-header">
+                    <span class="slot-number-badge">Urutan #${slotIdx + 1}</span>
+                    <span class="slot-pillar-hint">${pillarHints[slotIdx]}</span>
+                  </div>
+
+                  ${card ? `
+                    <div class="slot-content-text">${card.text}</div>
+                    <div class="slot-actions-bar">
+                      ${slotIdx > 0 ? `<button class="btn-slot-move" data-action="move-left" data-slot="${slotIdx}" title="Tukar dengan Urutan #${slotIdx}">◀</button>` : '<span></span>'}
+                      <button class="btn-slot-remove" data-action="remove" data-slot="${slotIdx}" title="Lepas kepingan ini">✕ Lepas</button>
+                      ${slotIdx < 3 ? `<button class="btn-slot-move" data-action="move-right" data-slot="${slotIdx}" title="Tukar dengan Urutan #${slotIdx + 2}">▶</button>` : '<span></span>'}
+                    </div>
+                  ` : `
+                    <div class="slot-placeholder">
+                      <div style="font-size:18px; margin-bottom:4px;">📥</div>
+                      <strong style="color:var(--ink-2); display:block; font-size:11.5px; margin-bottom:2px;">${pillarSubs[slotIdx]}</strong>
+                      <span>Tarik atau klik kepingan di bawah untuk menempatkan</span>
+                    </div>
+                  `}
+                </div>
+              `;
+            }).join('')}
           </div>
 
-          <div class="formula-slot ${this.doctorSlots.context ? 'filled' : ''}" data-slot="context" title="Klik untuk membatalkan kartu">
-            <span class="slot-tag">Slot 3 · Context (Batasan)</span>
-            ${this.doctorSlots.context 
-              ? `<div class="slot-content-text">${this.doctorSlots.context.text}</div>` 
-              : `<span class="slot-placeholder">Tarik / Klik kartu Context di sini</span>`}
-          </div>
-
-          <div class="formula-slot ${this.doctorSlots.format ? 'filled' : ''}" data-slot="format" title="Klik untuk membatalkan kartu">
-            <span class="slot-tag">Slot 4 · Format (Hasil)</span>
-            ${this.doctorSlots.format 
-              ? `<div class="slot-content-text">${this.doctorSlots.format.text}</div>` 
-              : `<span class="slot-placeholder">Tarik / Klik kartu Format di sini</span>`}
+          <!-- Controls Action Bar -->
+          <div class="doctor-action-bar">
+            <div class="doctor-status-hint" id="doctorSequenceHint">
+              ${isCurrentCaseSolved 
+                ? `<span style="color:var(--emerald); font-weight:800;">✓ PASIEN TELAH SEMBUH! Resep prompt R-T-C-F berhasil disintesis sempurna.</span>` 
+                : `<span>💡 <strong>Petunjuk:</strong> Tempatkan 4 kepingan yang tepat ke dalam Urutan #1 s.d #4, lalu klik <strong>"Periksa & Uji Susunan"</strong>!</span>`}
+            </div>
+            <div style="display:flex; gap:10px;">
+              <button class="btn btn-secondary" id="btnResetDoctorSlots" style="padding:7px 14px; font-size:12px;">🔄 Kosongkan</button>
+              <button class="btn btn-primary" id="btnValidateDoctorSlots" style="padding:8px 18px; font-size:12.5px; font-weight:800; background:linear-gradient(135deg, var(--tech), #0855A5);">
+                🩺 Periksa & Uji Susunan Prompt
+              </button>
+            </div>
           </div>
         </div>
 
-        <!-- Cured Prescription Box (Displayed when all 4 slots correctly filled) -->
-        ${filledCount === 4 ? `
+        <!-- Cured Prescription Box (Displayed when current case is solved) -->
+        ${isCurrentCaseSolved ? `
           <div class="cured-prompt-card">
             <div class="cured-header">
               <span>🎉 RESEP PROMPT DOKTER (KASUS ${this.doctorCaseIndex + 1} SEMBUH TOTAL):</span>
@@ -1633,19 +1733,23 @@ SLIDE 5: KESIMPULAN & PENUTUP
 
         <!-- Card Bank for Drag & Drop / Click Selection -->
         <div class="card-bank-wrap">
-          <div class="card-bank-header">
-            <span>💊 Apotek Obat Formula: Tarik (*Drag & Drop*) atau Klik kartu yang sesuai ke dalam slot</span>
+          <div class="card-bank-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>💊 Apotek Kepingan Formula (Baca & Tentukan Kepingan yang Sesuai):</span>
+            <span style="font-size:11px; color:var(--ink-2); font-weight:600; text-transform:none;">(Ada 4 kepingan baku R-T-C-F & 2 kepingan pengecoh)</span>
           </div>
           <div class="card-bank-grid" id="cardBankGrid">
-            ${currentCase.cards.map((c, i) => `
-              <div class="pill-card ${this.isCardUsed(c) ? 'used' : ''}" 
-                   draggable="${!this.isCardUsed(c)}" 
-                   data-idx="${i}" 
-                   data-type="${c.type}">
-                <span class="pill-card-tag ${c.type === 'dummy' ? 'distractor' : ''}">${c.tag}</span>
-                <span>${c.text}</span>
-              </div>
-            `).join('')}
+            ${shuffledCards.map((c, i) => {
+              const used = this.isCardUsed(c);
+              return `
+                <div class="pill-card ${used ? 'used' : ''}" 
+                     draggable="${!used}" 
+                     data-shuffled-idx="${i}"
+                     title="${used ? 'Sudah ditempatkan dalam urutan' : 'Tarik atau klik untuk memasukkan ke dalam urutan'}">
+                  <span class="pill-card-badge">🧩 Kepingan ${String.fromCharCode(65 + i)}</span>
+                  <span style="flex:1; line-height:1.45;">${c.text}</span>
+                </div>
+              `;
+            }).join('')}
           </div>
         </div>
       </div>
@@ -1659,31 +1763,86 @@ SLIDE 5: KESIMPULAN & PENUTUP
       });
     });
 
-    // 2. Setup Drag and Drop events
-    this.setupDoctorDragAndDrop(container, currentCase);
+    // 2. Setup Drag and Drop events (Between Bank & Slots, and Between Slots)
+    this.setupDoctorDragAndDrop(container, shuffledCards);
 
-    // 3. Card click selection fallback
+    // 3. Card click from bank -> places into selected slot or first empty slot
     container.querySelectorAll('.pill-card:not(.used)').forEach(cardEl => {
       cardEl.addEventListener('click', () => {
-        const idx = parseInt(cardEl.getAttribute('data-idx'), 10);
-        const cardData = currentCase.cards[idx];
-        this.applyDoctorCard(cardData, cardEl);
+        const sIdx = parseInt(cardEl.getAttribute('data-shuffled-idx'), 10);
+        const cardData = shuffledCards[sIdx];
+        this.placeCardIntoSlot(cardData);
       });
     });
 
-    // 4. Click slot to clear
-    container.querySelectorAll('.formula-slot.filled').forEach(slotEl => {
-      slotEl.addEventListener('click', () => {
-        const slotType = slotEl.getAttribute('data-slot');
-        if (this.doctorSlots[slotType]) {
-          this.doctorSlots[slotType] = null;
+    // 4. Slot Click / Move / Remove event handlers
+    container.querySelectorAll('.formula-slot').forEach(slotEl => {
+      slotEl.addEventListener('click', (e) => {
+        const slotIdx = parseInt(slotEl.getAttribute('data-slot'), 10);
+
+        // Move Left
+        if (e.target.closest('[data-action="move-left"]')) {
+          e.stopPropagation();
+          if (slotIdx > 0) {
+            const temp = this.doctorSlots[slotIdx];
+            this.doctorSlots[slotIdx] = this.doctorSlots[slotIdx - 1];
+            this.doctorSlots[slotIdx - 1] = temp;
+            this.doctorSlotStatus = ['neutral', 'neutral', 'neutral', 'neutral'];
+            if (window.audioMgr) window.audioMgr.click();
+            this.renderSubUnit2(document.getElementById('viewContainer'));
+          }
+          return;
+        }
+
+        // Move Right
+        if (e.target.closest('[data-action="move-right"]')) {
+          e.stopPropagation();
+          if (slotIdx < 3) {
+            const temp = this.doctorSlots[slotIdx];
+            this.doctorSlots[slotIdx] = this.doctorSlots[slotIdx + 1];
+            this.doctorSlots[slotIdx + 1] = temp;
+            this.doctorSlotStatus = ['neutral', 'neutral', 'neutral', 'neutral'];
+            if (window.audioMgr) window.audioMgr.click();
+            this.renderSubUnit2(document.getElementById('viewContainer'));
+          }
+          return;
+        }
+
+        // Remove
+        if (e.target.closest('[data-action="remove"]')) {
+          e.stopPropagation();
+          this.doctorSlots[slotIdx] = null;
+          this.doctorSlotStatus[slotIdx] = 'neutral';
+          this.activeDoctorSlotIndex = slotIdx;
+          if (window.audioMgr) window.audioMgr.click();
+          this.renderSubUnit2(document.getElementById('viewContainer'));
+          return;
+        }
+
+        // Click on empty slot -> select it as target
+        if (!this.doctorSlots[slotIdx]) {
+          this.activeDoctorSlotIndex = slotIdx;
           if (window.audioMgr) window.audioMgr.click();
           this.renderSubUnit2(document.getElementById('viewContainer'));
         }
       });
     });
 
-    // 5. Copy cured prompt button
+    // 5. Reset button
+    container.querySelector('#btnResetDoctorSlots')?.addEventListener('click', () => {
+      this.doctorSlots = [null, null, null, null];
+      this.doctorSlotStatus = ['neutral', 'neutral', 'neutral', 'neutral'];
+      this.activeDoctorSlotIndex = 0;
+      if (window.audioMgr) window.audioMgr.click();
+      this.renderSubUnit2(document.getElementById('viewContainer'));
+    });
+
+    // 6. Validate & Check Sequence button
+    container.querySelector('#btnValidateDoctorSlots')?.addEventListener('click', () => {
+      this.validateDoctorSequence();
+    });
+
+    // 7. Copy cured prompt button
     const btnCopyCured = container.querySelector('#btnCopyDoctorCured');
     btnCopyCured?.addEventListener('click', (e) => {
       const text = document.getElementById('doctorCuredText')?.innerText;
@@ -1692,43 +1851,83 @@ SLIDE 5: KESIMPULAN & PENUTUP
       }
     });
 
-    // 6. Next case button
+    // 8. Next case button
     const btnNext = container.querySelector('#btnNextCase');
     btnNext?.addEventListener('click', () => {
       this.switchDoctorCase(this.doctorCaseIndex + 1);
     });
 
-    // 7. Finish all doctor cases button
+    // 9. Finish all doctor cases button
     const btnFinish = container.querySelector('#btnFinishDoctor');
     btnFinish?.addEventListener('click', () => {
       if (window.confetti) {
         window.confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } });
       }
-      this.showRobotDialogue("LUAR BIASA! Seluruh 10 kasus Prompt Doctor berhasil kamu sembuhkan dengan formula R-T-C-F presisi!");
+      this.showRobotDialogue("LUAR BIASA! Seluruh 10 kasus Prompt Doctor berhasil kamu sembuhkan dengan urutan R-T-C-F presisi!");
     });
   }
 
-  switchDoctorCase(caseIndex) {
-    this.doctorCaseIndex = caseIndex;
-    this.doctorSlots = { role: null, task: null, context: null, format: null };
-    if (window.audioMgr) window.audioMgr.whoosh();
+  placeCardIntoSlot(cardData) {
+    if (!cardData) return;
+
+    if (this.isCardUsed(cardData)) {
+      this.showToast('Kepingan ini sudah ditempatkan dalam urutan!');
+      return;
+    }
+
+    let targetIdx = this.activeDoctorSlotIndex;
+    if (this.doctorSlots[targetIdx] !== null) {
+      targetIdx = this.doctorSlots.findIndex(s => s === null);
+    }
+
+    if (targetIdx === -1) {
+      this.showToast('Ke-4 urutan sudah terisi! Hapus atau geser kepingan untuk menyesuaikan urutan.');
+      if (window.audioMgr) window.audioMgr.errorBuzz();
+      return;
+    }
+
+    this.doctorSlots[targetIdx] = cardData;
+    this.doctorSlotStatus[targetIdx] = 'neutral';
+    
+    const nextEmpty = this.doctorSlots.findIndex(s => s === null);
+    this.activeDoctorSlotIndex = nextEmpty !== -1 ? nextEmpty : 0;
+
+    if (window.audioMgr) window.audioMgr.click();
     this.renderSubUnit2(document.getElementById('viewContainer'));
   }
 
-  setupDoctorDragAndDrop(container, currentCase) {
-    let draggedCard = null;
+  setupDoctorDragAndDrop(container, shuffledCards) {
+    let dragSource = null;
 
     container.querySelectorAll('.pill-card:not(.used)').forEach(cardEl => {
       cardEl.addEventListener('dragstart', (e) => {
-        const idx = parseInt(cardEl.getAttribute('data-idx'), 10);
-        draggedCard = currentCase.cards[idx];
+        const sIdx = parseInt(cardEl.getAttribute('data-shuffled-idx'), 10);
+        const cardData = shuffledCards[sIdx];
+        dragSource = { type: 'bank', data: cardData };
         cardEl.classList.add('dragging');
-        e.dataTransfer.setData('text/plain', JSON.stringify(draggedCard));
+        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'bank', sIdx }));
         e.dataTransfer.effectAllowed = 'move';
       });
 
       cardEl.addEventListener('dragend', () => {
         cardEl.classList.remove('dragging');
+        container.querySelectorAll('.formula-slot').forEach(s => s.classList.remove('drag-over'));
+      });
+    });
+
+    container.querySelectorAll('.formula-slot.filled').forEach(slotEl => {
+      slotEl.addEventListener('dragstart', (e) => {
+        const slotIdx = parseInt(slotEl.getAttribute('data-slot'), 10);
+        const cardData = this.doctorSlots[slotIdx];
+        if (!cardData) return;
+        dragSource = { type: 'slot', data: cardData, fromSlotIndex: slotIdx };
+        slotEl.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'slot', slotIdx }));
+        e.dataTransfer.effectAllowed = 'move';
+      });
+
+      slotEl.addEventListener('dragend', () => {
+        slotEl.classList.remove('dragging');
         container.querySelectorAll('.formula-slot').forEach(s => s.classList.remove('drag-over'));
       });
     });
@@ -1747,86 +1946,115 @@ SLIDE 5: KESIMPULAN & PENUTUP
       slotEl.addEventListener('drop', (e) => {
         e.preventDefault();
         slotEl.classList.remove('drag-over');
-        const slotType = slotEl.getAttribute('data-slot');
+        const targetSlotIdx = parseInt(slotEl.getAttribute('data-slot'), 10);
 
-        let cardData = draggedCard;
-        if (!cardData) {
+        if (!dragSource || !dragSource.data) {
           try {
-            cardData = JSON.parse(e.dataTransfer.getData('text/plain'));
+            const raw = JSON.parse(e.dataTransfer.getData('text/plain'));
+            if (raw.type === 'bank') dragSource = { type: 'bank', data: shuffledCards[raw.sIdx] };
+            if (raw.type === 'slot') dragSource = { type: 'slot', data: this.doctorSlots[raw.slotIdx], fromSlotIndex: raw.slotIdx };
           } catch (err) {}
         }
 
-        if (!cardData) return;
+        if (!dragSource || !dragSource.data) return;
 
-        if (cardData.type === 'dummy') {
-          if (window.audioMgr) window.audioMgr.errorBuzz();
-          if (window.robot) window.robot.setState('CONFUSE', 2000);
-          this.showRobotDialogue("Aduh! Kartu itu adalah komponen pengecoh yang salah dosis! Pilih formula baku!");
-          return;
+        if (dragSource.type === 'bank') {
+          this.doctorSlots[targetSlotIdx] = dragSource.data;
+          this.doctorSlotStatus = ['neutral', 'neutral', 'neutral', 'neutral'];
+        } else if (dragSource.type === 'slot') {
+          const fromIdx = dragSource.fromSlotIndex;
+          if (fromIdx !== targetSlotIdx) {
+            const temp = this.doctorSlots[targetSlotIdx];
+            this.doctorSlots[targetSlotIdx] = this.doctorSlots[fromIdx];
+            this.doctorSlots[fromIdx] = temp;
+            this.doctorSlotStatus = ['neutral', 'neutral', 'neutral', 'neutral'];
+          }
         }
 
-        if (cardData.type !== slotType) {
-          if (window.audioMgr) window.audioMgr.errorBuzz();
-          if (window.robot) window.robot.setState('CONFUSE', 2000);
-          this.showRobotDialogue(`Kartu itu adalah ${cardData.tag}, bukan untuk Slot ${slotType.toUpperCase()}!`);
-          return;
-        }
-
-        // Place card into slot
-        this.doctorSlots[slotType] = cardData;
-        if (window.audioMgr) window.audioMgr.coinDing();
-        this.checkDoctorCaseCompletion();
+        if (window.audioMgr) window.audioMgr.click();
+        this.renderSubUnit2(document.getElementById('viewContainer'));
       });
     });
   }
 
-  isCardUsed(card) {
-    return Object.values(this.doctorSlots).some(s => s && s.text === card.text);
-  }
+  validateDoctorSequence() {
+    const cases = this.getDoctorCases();
+    const currentCase = cases[this.doctorCaseIndex];
 
-  applyDoctorCard(card, cardEl) {
-    if (card.type === 'dummy') {
+    const filledCount = this.doctorSlots.filter(Boolean).length;
+    if (filledCount < 4) {
+      this.showToast('⚠️ Masih ada urutan yang kosong! Tempatkan 4 kepingan formula.');
       if (window.audioMgr) window.audioMgr.errorBuzz();
       if (window.robot) window.robot.setState('CONFUSE', 2000);
-      this.showRobotDialogue("Aduh! Kartu itu adalah komponen pengecoh yang salah dosis! Pilih formula baku!");
+      this.showRobotDialogue("Masih ada urutan yang kosong! Lengkapi ke-4 urutan pilar R-T-C-F terlebih dahulu.");
       return;
     }
 
-    if (!this.doctorSlots[card.type]) {
-      this.doctorSlots[card.type] = card;
-      cardEl.classList.add('used');
-      if (window.audioMgr) window.audioMgr.coinDing();
-      this.checkDoctorCaseCompletion();
+    const s0 = this.doctorSlots[0];
+    const s1 = this.doctorSlots[1];
+    const s2 = this.doctorSlots[2];
+    const s3 = this.doctorSlots[3];
+
+    // Check for distractor / dummy cards
+    const dummyIdx = this.doctorSlots.findIndex(s => s && s.type === 'dummy');
+    if (dummyIdx !== -1) {
+      this.doctorSlotStatus = ['neutral', 'neutral', 'neutral', 'neutral'];
+      this.doctorSlotStatus[dummyIdx] = 'wrong';
+      if (window.audioMgr) window.audioMgr.errorBuzz();
+      if (window.robot) window.robot.setState('CONFUSE', 2500);
+      this.showRobotDialogue(`Urutan #${dummyIdx + 1} keliru! Kepingan itu adalah kalimat pengecoh/ambigu yang tidak sesuai standar industri. Ganti kepingan tersebut!`);
+      this.renderSubUnit2(document.getElementById('viewContainer'));
+      return;
     }
-  }
 
-  checkDoctorCaseCompletion() {
-    const filledCount = Object.values(this.doctorSlots).filter(Boolean).length;
+    const ok0 = s0?.type === 'role';
+    const ok1 = s1?.type === 'task';
+    const ok2 = s2?.type === 'context';
+    const ok3 = s3?.type === 'format';
 
-    if (filledCount === 4) {
-      // Mark current case as solved
+    this.doctorSlotStatus = [
+      ok0 ? 'correct' : 'wrong',
+      ok1 ? 'correct' : 'wrong',
+      ok2 ? 'correct' : 'wrong',
+      ok3 ? 'correct' : 'wrong'
+    ];
+
+    if (ok0 && ok1 && ok2 && ok3) {
+      // Perfect RTCF Order!
       this.state.doctorSolvedCases[this.doctorCaseIndex] = true;
       const totalSolved = Object.keys(this.state.doctorSolvedCases).length;
       this.state.minigameScore = totalSolved * 10;
-
-      if (window.confetti) {
-        window.confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+      if (totalSolved >= 10) {
+        this.state.progress.sub2 = true;
       }
-      if (window.audioMgr) window.audioMgr.successChime();
+      this.saveSession();
+      this.renderSidebar();
+
+      if (window.confetti) window.confetti({ particleCount: 75, spread: 70, origin: { y: 0.6 } });
+      if (window.audioMgr) {
+        window.audioMgr.successChime();
+        setTimeout(() => window.audioMgr.coinDing(), 400);
+      }
       if (window.robot) window.robot.setState('CHEER', 3500);
 
       if (totalSolved >= 10) {
-        this.state.progress.sub2 = true;
-        this.showRobotDialogue("HEBAT SEKALI! Seluruh 10 kasus Prompt Doctor berhasil kamu sembuhkan sempurna!");
+        this.showRobotDialogue("SEMPURNA! Seluruh 10 kasus Prompt Doctor berhasil kamu sembuhkan dengan urutan R-T-C-F yang presisi!");
       } else {
-        this.showRobotDialogue(`HORE! Kasus ${this.doctorCaseIndex + 1} sembuh total! Lanjut ke kasus berikutnya!`);
+        this.showRobotDialogue(`HORE! Kasus ${this.doctorCaseIndex + 1} sembuh total! Urutan pilar R-T-C-F tersusun tepat!`);
       }
-
-      this.saveSession();
-      this.renderSidebar();
     } else {
-      if (window.robot) window.robot.setState('EXPLAIN', 1500);
-      this.showRobotDialogue(`Bagus! Slot terisi! Teruskan hingga 4 pilar R-T-C-F lengkap!`);
+      if (window.audioMgr) window.audioMgr.errorBuzz();
+      if (window.robot) window.robot.setState('CONFUSE', 2500);
+
+      if (!ok0) {
+        this.showRobotDialogue("Urutan #1 belum tepat! Awali prompt dengan menentukan Siapa Peran (Role) AI.");
+      } else if (!ok1) {
+        this.showRobotDialogue("Urutan #2 belum tepat! Di urutan kedua, cantumkan Instruksi Tugas (Task) utama.");
+      } else if (!ok2) {
+        this.showRobotDialogue("Urutan #3 belum tepat! Di urutan ketiga, berikan Konteks & Batasan (Context) spesifik.");
+      } else if (!ok3) {
+        this.showRobotDialogue("Urutan #4 belum tepat! Akhiri urutan prompt dengan instruksi Format luaran hasil.");
+      }
     }
 
     this.renderSubUnit2(document.getElementById('viewContainer'));

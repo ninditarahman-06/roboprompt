@@ -951,24 +951,44 @@ html, body {
   font-family: var(--font-heading);
 }
 
-/* 4 Diagnosis Slots */
+/* 4 Sequenced Diagnosis Slots */
+.slots-sequence-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .slots-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
+  position: relative;
 }
 
 .formula-slot {
-  background: #FAFCFE;
+  background: #FFFFFF;
   border: 2px dashed #C8DAEB;
   border-radius: var(--radius-md);
-  padding: 12px;
-  min-height: 110px;
+  padding: 10px 12px;
+  min-height: 140px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   transition: all 0.2s ease;
   position: relative;
+  box-shadow: 0 2px 6px rgba(11, 42, 74, 0.03);
+  cursor: pointer;
+}
+
+.formula-slot:hover:not(.filled) {
+  border-color: var(--tech);
+  background: #F8FAFD;
+}
+
+.formula-slot.active-target {
+  border-color: var(--tech);
+  background: #F0F7FF;
+  box-shadow: 0 0 0 3px rgba(10, 111, 214, 0.2);
 }
 
 .formula-slot.drag-over {
@@ -980,30 +1000,140 @@ html, body {
 
 .formula-slot.filled {
   border-style: solid;
-  border-color: var(--emerald);
-  background: #F0FDF4;
+  border-color: #CBD5E1;
+  background: #FFFFFF;
+  cursor: default;
 }
 
-.slot-tag {
+.formula-slot.correct {
+  border-style: solid;
+  border-color: var(--emerald) !important;
+  background: #F0FDF4 !important;
+  box-shadow: 0 0 0 2px rgba(0, 166, 81, 0.25) !important;
+}
+
+.formula-slot.wrong {
+  border-style: solid;
+  border-color: #EF4444 !important;
+  background: #FEF2F2 !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25) !important;
+  animation: slotShake 0.3s ease;
+}
+
+@keyframes slotShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.slot-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #EEF4FA;
+}
+
+.slot-number-badge {
   font-size: 10.5px;
   font-weight: 800;
-  text-transform: uppercase;
+  color: #FFFFFF;
+  background: var(--tech);
+  padding: 2px 7px;
+  border-radius: 8px;
+  letter-spacing: 0.3px;
+}
+
+.slot-pillar-hint {
+  font-size: 10px;
+  font-weight: 700;
   color: var(--ink-2);
+  text-transform: uppercase;
 }
 
 .slot-placeholder {
-  font-size: 11.5px;
+  font-size: 11px;
   color: #94A3B8;
   text-align: center;
   margin: auto;
+  line-height: 1.4;
+  padding: 8px 4px;
 }
 
 .slot-content-text {
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11.5px;
+  font-weight: 600;
   color: var(--ink);
   line-height: 1.4;
-  margin-top: 6px;
+  flex: 1;
+  word-break: break-word;
+  padding: 4px 0;
+}
+
+.slot-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid #EEF4FA;
+  gap: 4px;
+}
+
+.btn-slot-move {
+  background: #EDF5FD;
+  border: 1px solid #D1E4F5;
+  color: var(--tech);
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 6px;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-slot-move:hover {
+  background: var(--tech);
+  color: #FFFFFF;
+}
+
+.btn-slot-remove {
+  background: transparent;
+  border: none;
+  color: #EF4444;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+
+.btn-slot-remove:hover {
+  background: #FEE2E2;
+}
+
+.doctor-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FFFFFF;
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.doctor-status-hint {
+  font-size: 12px;
+  color: var(--ink);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
 }
 
 /* Case study navigation & narrative */
@@ -1104,30 +1234,51 @@ html, body {
 }
 
 .pill-card {
-  background: #F3F8FD;
+  background: #FFFFFF;
   border: 1.5px solid #D8E7F5;
   border-radius: var(--radius-md);
-  padding: 10px 14px;
+  padding: 11px 14px;
   font-size: 12px;
   font-weight: 600;
   color: var(--ink);
-  cursor: pointer;
+  cursor: grab;
   transition: all 0.2s ease;
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 10px;
+  box-shadow: 0 2px 6px rgba(11, 42, 74, 0.03);
+  user-select: none;
+}
+
+.pill-card:active {
+  cursor: grabbing;
 }
 
 .pill-card:hover:not(.used) {
-  background: #E4F0FB;
+  background: #F4F9FE;
   border-color: var(--tech);
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(10, 111, 214, 0.14);
 }
 
 .pill-card.used {
   opacity: 0.35;
   pointer-events: none;
+  background: #F1F5F9;
+  border-color: #CBD5E1;
   text-decoration: line-through;
+}
+
+.pill-card-badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: var(--tech);
+  background: #E8F3FF;
+  border: 1px solid #CDE2FA;
+  flex-shrink: 0;
+  letter-spacing: 0.3px;
 }
 
 .pill-card-tag {
