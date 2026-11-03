@@ -1006,8 +1006,11 @@ SLIDE 5: KESIMPULAN & PENUTUP
     let html = subUnits.map(item => {
       const isCompleted = this.state.progress[item.key];
       const isActive = this.currentSubUnit === item.id;
-      // Sub-unit unlocked if previous completed or first
-      const isLocked = item.id > 1 && !this.state.progress[`sub${item.id - 1}`] && !isActive;
+      // Sub-unit unlocked if previous completed or first.
+      // Sub-3 (RoboPrompt Studio) is NEVER locked even if overall progress is 0%.
+      const isLocked = (item.id === 3) 
+        ? false 
+        : (item.id > 1 && !this.state.progress[`sub${item.id - 1}`] && !isActive);
 
       let icon = item.id;
       if (isCompleted) icon = '✓';
@@ -1090,7 +1093,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
     } else if (id === 3) {
       this.renderSubUnit3(container);
       if (window.robot) window.robot.setState('EXPLAIN', 3000);
-      this.showRobotDialogue("Pilih jenis AI Generatif yang ingin kamu rancang (Dokumen, Foto, Musik, Koding, Slide), lalu uji responsnya!");
+      this.showRobotDialogue("Selamat datang di RoboPrompt Studio! Masukkan formulamu pada pilar R-T-C-F, lalu klik '⚡ Optimalkan dengan Gemini AI'!");
     } else if (id === 4) {
       this.renderSubUnit4(container);
       if (window.robot) window.robot.setState('IDLE');
