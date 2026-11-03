@@ -30,3 +30,4 @@ if %errorlevel% equ 0 (
     echo [GAGAL] Terjadi kesalahan saat push. Pastikan koneksi dan izin akun GitHub benar.
 )
 pause
+
