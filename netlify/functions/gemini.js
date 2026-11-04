@@ -10,7 +10,7 @@ exports.handler = async function (event, context) {
   // CORS Headers for secure cross-origin interaction
   const headers = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, x-goog-api-key',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Content-Type': 'application/json'
   };
@@ -32,7 +32,8 @@ exports.handler = async function (event, context) {
     const { role, task, context: promptContext, format, customApiKey } = data;
 
     // Use environment variable first, with fallback to customApiKey if provided by user in UI
-    const apiKey = process.env.GEMINI_API_KEY || customApiKey;
+    const rawApiKey = process.env.GEMINI_API_KEY || customApiKey;
+    const apiKey = rawApiKey ? rawApiKey.trim() : '';
 
     if (!apiKey) {
       return {
@@ -73,18 +74,55 @@ Format Output yang Diwajibkan:
 
 Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jangan mengeksekusi tugasnya, buatkan teks prompt-nya saja):`;
 
-    // Call Google Gemini REST API (v1beta)
-    const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash'];
+    // 1. Discover available models dynamically via ModelService.ListModels
+    let candidateModels = [];
+    try {
+      const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+      const listRes = await fetch(listUrl, {
+        headers: { 'x-goog-api-key': apiKey }
+      });
+      if (listRes.ok) {
+        const listData = await listRes.json();
+        if (listData.models && Array.isArray(listData.models)) {
+          const supported = listData.models
+            .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
+            .map(m => m.name.replace(/^models\//, ''));
+          
+          const flashModels = supported.filter(m => m.toLowerCase().includes('flash'));
+          const otherModels = supported.filter(m => !m.toLowerCase().includes('flash'));
+          candidateModels = [...flashModels, ...otherModels];
+        }
+      }
+    } catch (e) {
+      // ListModels failed, will fallback to list below
+    }
+
+    // Comprehensive fallback candidate list covering all modern Gemini versions
+    const fallbackModels = [
+      'gemini-2.0-flash',
+      'gemini-2.0-flash-lite',
+      'gemini-2.0-flash-001',
+      'gemini-2.5-flash',
+      'gemini-2.5-flash-lite',
+      'gemini-3.5-flash-lite',
+      'gemini-3.8-flash',
+      'gemini-1.5-flash',
+      'gemini-1.5-flash-latest',
+      'gemini-1.5-pro'
+    ];
+
+    const modelsToTry = [...new Set([...candidateModels, ...fallbackModels])];
+
     let lastError = null;
     let resultText = '';
     let usedModel = '';
 
-    for (const model of models) {
+    for (const model of modelsToTry) {
       try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
         
-        // Use official system_instruction property with contents fallback
-        const payload = {
+        // 1. Try with modern system_instruction
+        let payload = {
           system_instruction: {
             parts: [{ text: systemInstruction }]
           },
@@ -102,11 +140,38 @@ Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jang
           }
         };
 
-        const res = await fetch(url, {
+        let res = await fetch(url, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey
+          },
           body: JSON.stringify(payload)
         });
+
+        // 2. If system_instruction is not supported (HTTP 400), retry by embedding instruction in contents
+        if (res.status === 400) {
+          payload = {
+            contents: [
+              {
+                role: 'user',
+                parts: [{ text: `${systemInstruction}\n\n---\n\n${userPrompt}` }]
+              }
+            ],
+            generationConfig: {
+              temperature: 0.6,
+              maxOutputTokens: 2048
+            }
+          };
+          res = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': apiKey
+            },
+            body: JSON.stringify(payload)
+          });
+        }
 
         const json = await res.json();
         if (!res.ok) {

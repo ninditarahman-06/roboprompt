@@ -2270,12 +2270,19 @@ SLIDE 5: KESIMPULAN & PENUTUP
       if (isFallback) {
         if (window.audioMgr) window.audioMgr.click();
         if (window.robot) window.robot.setState('EXPLAIN', 4000);
-        this.showToast('⚠️ Netlify belum membaca API Key. Menampilkan formula simulasi.', '⚠️');
-        this.showRobotDialogue("Perhatian: Netlify belum membaca GEMINI_API_KEY (" + (netlifyErrorMsg || 'belum aktif') + "). Hasil di atas adalah formula simulasi offline. Pastikan variabel GEMINI_API_KEY sudah disetel di Netlify dan lakukan 'Clear cache and deploy'!");
+        
+        let errorDetail = netlifyErrorMsg || 'Koneksi API tidak tersedia';
+        if (errorDetail.includes('MISSING_API_KEY')) {
+          this.showToast('⚠️ GEMINI_API_KEY belum terpasang di Netlify Environment Variables.', '⚠️');
+          this.showRobotDialogue("Variabel GEMINI_API_KEY belum disetel di Netlify. Masukkan API Key di Site configuration > Environment variables Netlify, atau klik 'Setel Gemini API' di atas!");
+        } else {
+          this.showToast('⚠️ Kendala AI: ' + errorDetail.substring(0, 45), '⚠️');
+          this.showRobotDialogue("Pemberitahuan dari Google AI: " + errorDetail + ". Menampilkan formula simulasi edukatif offline.");
+        }
       } else {
         if (window.audioMgr) window.audioMgr.successChime();
         if (window.robot) window.robot.setState('CHEER', 3500);
-        this.showRobotDialogue("Luar biasa! Prompt R-T-C-F berhasil disempurnakan oleh Gemini AI dan siap digunakan. Klik tombol 'Salin Prompt' di bawah!");
+        this.showRobotDialogue("Luar biasa! Prompt R-T-C-F berhasil disempurnakan oleh Gemini AI (" + usedSource + ") dan siap digunakan. Klik tombol 'Salin Prompt' di bawah!");
         this.showToast('Prompt berhasil dioptimalkan oleh Gemini AI!', '⚡');
       }
 
@@ -2334,7 +2341,17 @@ Format Output yang Diwajibkan:
 
 Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jangan mengeksekusi tugasnya, buatkan teks prompt-nya saja):`;
 
-    const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash'];
+    const models = [
+      'gemini-2.0-flash',
+      'gemini-2.0-flash-lite',
+      'gemini-2.5-flash',
+      'gemini-2.5-flash-lite',
+      'gemini-3.5-flash-lite',
+      'gemini-3.8-flash',
+      'gemini-1.5-flash',
+      'gemini-1.5-flash-latest',
+      'gemini-1.5-pro'
+    ];
     let lastError = null;
 
     for (const m of models) {
