@@ -351,6 +351,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
     this.setupEventListeners();
     this.renderSidebar();
     this.setupRobot();
+    this.checkNetlifyHealth();
 
     // Check if initial registration is needed
     if (!this.state.isRegistered || !this.state.studentName || !this.state.studentNis) {
@@ -813,6 +814,11 @@ SLIDE 5: KESIMPULAN & PENUTUP
         inpGeminiKey.type = 'password';
         btnToggleShowKey.textContent = '👁️ Tampilkan';
       }
+    });
+
+    const btnTestGeminiKey = document.getElementById('btnTestGeminiKey');
+    btnTestGeminiKey?.addEventListener('click', () => {
+      this.testGeminiApiKey();
     });
 
     // Modal Close buttons
@@ -1981,7 +1987,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
   // SUB-UNIT 3: ROBOPROMPT STUDIO (INTEGRASI GEMINI AI & USER INPUT MURNI)
   // ========================================================
   isGeminiConfigured() {
-    return Boolean(this.geminiApiKey || (window.location && window.location.hostname && window.location.hostname.includes('netlify.app')));
+    return Boolean(this.geminiApiKey || this.hasNetlifyKey);
   }
 
   openGeminiModal() {
@@ -1989,7 +1995,184 @@ SLIDE 5: KESIMPULAN & PENUTUP
     if (!modal) return;
     const inp = document.getElementById('inpGeminiApiKey');
     if (inp) inp.value = this.geminiApiKey || '';
+    const resBox = document.getElementById('geminiTestResult');
+    if (resBox) resBox.style.display = 'none';
     modal.classList.add('open');
+    this.checkNetlifyHealth();
+  }
+
+  async checkNetlifyHealth() {
+    const statusBox = document.getElementById('netlifyStatusBox');
+    const tag = document.getElementById('netlifyStatusTag');
+    const detail = document.getElementById('netlifyStatusDetail');
+
+    try {
+      const res = await fetch('/.netlify/functions/gemini', {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        this.hasNetlifyKey = Boolean(data.hasNetlifyKey);
+
+        if (this.hasNetlifyKey) {
+          if (tag) {
+            tag.textContent = '🟢 Aktif (Serverless)';
+            tag.style.background = '#DCFCE7';
+            tag.style.color = '#15803D';
+          }
+          if (detail) {
+            detail.innerHTML = `Variabel <code>GEMINI_API_KEY</code> terdeteksi di serverless Netlify (<code>${data.maskedKey || '***'}</code>). Siswa dapat langsung mengoptimalkan prompt tanpa input manual!`;
+          }
+          if (statusBox) {
+            statusBox.style.background = '#F0FDF4';
+            statusBox.style.borderColor = '#BBF7D0';
+          }
+        } else {
+          if (tag) {
+            tag.textContent = '🟡 Belum Disetel';
+            tag.style.background = '#FEF3C7';
+            tag.style.color = '#B45309';
+          }
+          if (detail) {
+            detail.innerHTML = `Netlify Functions aktif, tetapi variabel <code>GEMINI_API_KEY</code> belum ditambahkan di dashboard Netlify. Siswa dapat memasukkan API Key di bawah (tersimpan di browser), atau admin dapat mengaturnya di Netlify.`;
+          }
+          if (statusBox) {
+            statusBox.style.background = '#FFFBEB';
+            statusBox.style.borderColor = '#FDE68A';
+          }
+        }
+      } else {
+        throw new Error(`Status ${res.status}`);
+      }
+    } catch (e) {
+      this.hasNetlifyKey = false;
+      if (tag) {
+        tag.textContent = '⚪ Mode Standalone';
+        tag.style.background = '#F1F5F9';
+        tag.style.color = '#64748B';
+      }
+      if (detail) {
+        detail.innerHTML = `Berjalan dalam mode lokal / web statis. Gunakan kolom di bawah untuk menghubungkan Google Gemini API langsung dari peramban.`;
+      }
+      if (statusBox) {
+        statusBox.style.background = '#F8FAFC';
+        statusBox.style.borderColor = '#E2E8F0';
+      }
+    }
+
+    // Refresh Sub-Unit 3 header button if visible
+    const btnBadge = document.getElementById('btnOpenGeminiModal');
+    if (btnBadge) {
+      const active = this.isGeminiConfigured();
+      const dot = btnBadge.querySelector('.gemini-status-dot');
+      const textSpan = btnBadge.querySelector('span:last-child');
+      if (dot) dot.className = `gemini-status-dot ${active ? '' : 'offline'}`;
+      if (textSpan) textSpan.textContent = active ? '⚡ Gemini AI Aktif' : '🔑 Setel Gemini API';
+    }
+  }
+
+  async testGeminiApiKey() {
+    const inp = document.getElementById('inpGeminiApiKey');
+    const resultDiv = document.getElementById('geminiTestResult');
+    const btnTest = document.getElementById('btnTestGeminiKey');
+
+    let rawKey = (inp?.value || '').trim();
+    const cleanKey = rawKey.replace(/^["']+|["']+$/g, '').trim();
+
+    if (!resultDiv) return;
+    resultDiv.style.display = 'block';
+    resultDiv.style.background = '#EFF6FF';
+    resultDiv.style.border = '1px solid #BFDBFE';
+    resultDiv.style.color = '#1E40AF';
+    resultDiv.innerHTML = '⏳ Menghubungi server Google Gemini AI...';
+
+    if (btnTest) btnTest.disabled = true;
+
+    try {
+      let isSuccess = false;
+      let errorMsg = '';
+
+      if (cleanKey) {
+        // Direct probe to Google API
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cleanKey}`;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': cleanKey
+          },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: 'Halo' }] }],
+            generationConfig: { maxOutputTokens: 5 }
+          })
+        });
+
+        const json = await res.json().catch(() => ({}));
+        if (res.ok) {
+          isSuccess = true;
+        } else {
+          errorMsg = json.error?.message || `HTTP ${res.status}`;
+        }
+      } else {
+        // Test Netlify cloud backend
+        const res = await fetch('/.netlify/functions/gemini', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ testOnly: true })
+        });
+        const json = await res.json().catch(() => ({}));
+        if (res.ok && json.success) {
+          isSuccess = true;
+        } else {
+          errorMsg = json.message || 'Variabel GEMINI_API_KEY di Netlify belum disetel atau tidak valid';
+        }
+      }
+
+      if (isSuccess) {
+        resultDiv.style.background = '#F0FDF4';
+        resultDiv.style.border = '1px solid #BBF7D0';
+        resultDiv.style.color = '#15803D';
+        resultDiv.innerHTML = `
+          <strong>✅ Kunci API Valid & Berhasil Terhubung!</strong><br>
+          Model <strong>gemini-2.0-flash</strong> merespons dengan normal. Klik <em>"💾 Simpan & Hubungkan"</em> di bawah untuk mengaktifkannya.
+        `;
+        if (window.audioMgr) window.audioMgr.successChime();
+        if (window.robot) window.robot.setState('CHEER', 2500);
+      } else {
+        resultDiv.style.background = '#FEF2F2';
+        resultDiv.style.border = '1px solid #FECACA';
+        resultDiv.style.color = '#991B1B';
+
+        let explanation = '';
+        if (errorMsg.toLowerCase().includes('api key not valid') || errorMsg.toLowerCase().includes('unauthenticated')) {
+          explanation = `Google menolak API Key ini (<strong>API key not valid</strong>).<br>
+          <strong>Solusi Praktis:</strong>
+          <ul style="margin:6px 0 0 16px; padding:0;">
+            <li>Buka <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#DC2626; font-weight:700; text-decoration:underline;">Google AI Studio</a>.</li>
+            <li>Klik tombol biru <strong>Create API key</strong> &rarr; pilih <strong>"Create API key in new project"</strong>.</li>
+            <li>Salin key menggunakan ikon copy di samping key, lalu tempelkan ke sini dan klik Uji lagi.</li>
+          </ul>`;
+        } else {
+          explanation = `Pesan kendala: ${this.escapeHtml(errorMsg)}`;
+        }
+
+        resultDiv.innerHTML = `
+          <strong>❌ Pengujian Gagal:</strong><br>
+          ${explanation}
+        `;
+        if (window.audioMgr) window.audioMgr.errorBuzz();
+        if (window.robot) window.robot.setState('CONFUSE', 2500);
+      }
+    } catch (e) {
+      resultDiv.style.background = '#FEF2F2';
+      resultDiv.style.border = '1px solid #FECACA';
+      resultDiv.style.color = '#991B1B';
+      resultDiv.innerHTML = `<strong>❌ Terjadi Kesalahan:</strong><br>${this.escapeHtml(e.message || 'Koneksi gagal')}`;
+    } finally {
+      if (btnTest) btnTest.disabled = false;
+    }
   }
 
   renderSubUnit3(container) {
@@ -2341,25 +2524,28 @@ Format Output yang Diwajibkan:
 
 Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jangan mengeksekusi tugasnya, buatkan teks prompt-nya saja):`;
 
+    const apiKey = (this.geminiApiKey || '').trim().replace(/^["']+|["']+$/g, '').trim();
+    if (!apiKey) {
+      throw new Error('API Key belum diatur');
+    }
+
     const models = [
       'gemini-2.0-flash',
-      'gemini-2.0-flash-lite',
       'gemini-2.5-flash',
-      'gemini-2.5-flash-lite',
-      'gemini-3.5-flash-lite',
-      'gemini-3.8-flash',
-      'gemini-1.5-flash',
-      'gemini-1.5-flash-latest',
-      'gemini-1.5-pro'
+      'gemini-2.0-flash-lite',
+      'gemini-1.5-flash'
     ];
     let lastError = null;
 
     for (const m of models) {
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${this.geminiApiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`;
         const res = await fetch(url, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey
+          },
           body: JSON.stringify({
             system_instruction: {
               parts: [{ text: systemInstruction }]
@@ -2369,12 +2555,21 @@ Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jang
           })
         });
 
-        const json = await res.json();
+        // Fail fast if unauthorized or invalid key
+        if (res.status === 401 || res.status === 403) {
+          const errJson = await res.json().catch(() => ({}));
+          throw new Error(errJson.error?.message || 'API key not valid (Ditolak Google). Silakan gunakan API Key baru dari Google AI Studio.');
+        }
+
+        const json = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(json.error?.message || `HTTP ${res.status}`);
         const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
         if (text) return text;
       } catch (e) {
         lastError = e;
+        if (e.message && (e.message.includes('API key not valid') || e.message.includes('UNAUTHENTICATED'))) {
+          throw e; // Stop trying other models if key is invalid
+        }
       }
     }
     throw lastError || new Error('Gagal memanggil Gemini API');

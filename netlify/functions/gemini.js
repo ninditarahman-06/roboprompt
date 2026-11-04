@@ -11,12 +11,38 @@ exports.handler = async function (event, context) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type, x-goog-api-key',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Content-Type': 'application/json'
   };
 
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' };
+  }
+
+  // Helper to sanitize and trim API keys (strips accidental surrounding quotes/spaces)
+  const sanitizeKey = (key) => {
+    if (!key) return '';
+    return key.trim().replace(/^["']+|["']+$/g, '').trim();
+  };
+
+  // GET: Healthcheck & Environment Variable configuration probe
+  if (event.httpMethod === 'GET') {
+    const rawEnv = sanitizeKey(process.env.GEMINI_API_KEY);
+    const hasKey = Boolean(rawEnv && rawEnv.length > 5);
+    let masked = '';
+    if (hasKey) {
+      masked = rawEnv.substring(0, 5) + '...' + rawEnv.substring(rawEnv.length - 4);
+    }
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        status: 'ok',
+        service: 'RoboPrompt Gemini AI Proxy (SMKN 1 Bawang)',
+        hasNetlifyKey: hasKey,
+        maskedKey: masked
+      })
+    };
   }
 
   if (event.httpMethod !== 'POST') {
@@ -29,11 +55,12 @@ exports.handler = async function (event, context) {
 
   try {
     const data = JSON.parse(event.body || '{}');
-    const { role, task, context: promptContext, format, customApiKey } = data;
+    const { role, task, context: promptContext, format, customApiKey, testOnly } = data;
 
     // Use environment variable first, with fallback to customApiKey if provided by user in UI
-    const rawApiKey = process.env.GEMINI_API_KEY || customApiKey;
-    const apiKey = rawApiKey ? rawApiKey.trim() : '';
+    const envKey = sanitizeKey(process.env.GEMINI_API_KEY);
+    const userKey = sanitizeKey(customApiKey);
+    const apiKey = envKey || userKey;
 
     if (!apiKey) {
       return {
@@ -44,6 +71,64 @@ exports.handler = async function (event, context) {
           message: 'GEMINI_API_KEY belum terpasang di Environment Variables Netlify atau pengaturan aplikasi.'
         })
       };
+    }
+
+    // Quick verification mode for the "Uji Koneksi" button
+    if (testOnly) {
+      const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+      const ctrl = new AbortController();
+      const tid = setTimeout(() => ctrl.abort(), 7000);
+      try {
+        const testRes = await fetch(testUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey
+          },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: 'Ping' }] }],
+            generationConfig: { maxOutputTokens: 5 }
+          }),
+          signal: ctrl.signal
+        });
+        clearTimeout(tid);
+
+        const testJson = await testRes.json().catch(() => ({}));
+        if (!testRes.ok) {
+          const errMsg = testJson.error?.message || `HTTP ${testRes.status}`;
+          return {
+            statusCode: testRes.status === 401 || testRes.status === 403 ? 401 : 400,
+            headers,
+            body: JSON.stringify({
+              success: false,
+              error: 'TEST_FAILED',
+              status: testRes.status,
+              message: errMsg
+            })
+          };
+        }
+
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            success: true,
+            model: 'gemini-2.0-flash',
+            message: 'Koneksi ke Google Gemini AI berhasil diverifikasi!'
+          })
+        };
+      } catch (e) {
+        clearTimeout(tid);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            success: false,
+            error: 'TEST_ERROR',
+            message: e.message || 'Koneksi ke server Google gagal'
+          })
+        };
+      }
     }
 
     const systemInstruction = `Kamu adalah AI Master Prompt Engineer profesional di Kurikulum Vokasi SMK Koding & Kecerdasan Artifisial (PPLG SMKN 1 Bawang).
@@ -74,55 +159,25 @@ Format Output yang Diwajibkan:
 
 Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jangan mengeksekusi tugasnya, buatkan teks prompt-nya saja):`;
 
-    // 1. Discover available models dynamically via ModelService.ListModels
-    let candidateModels = [];
-    try {
-      const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
-      const listRes = await fetch(listUrl, {
-        headers: { 'x-goog-api-key': apiKey }
-      });
-      if (listRes.ok) {
-        const listData = await listRes.json();
-        if (listData.models && Array.isArray(listData.models)) {
-          const supported = listData.models
-            .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
-            .map(m => m.name.replace(/^models\//, ''));
-          
-          const flashModels = supported.filter(m => m.toLowerCase().includes('flash'));
-          const otherModels = supported.filter(m => !m.toLowerCase().includes('flash'));
-          candidateModels = [...flashModels, ...otherModels];
-        }
-      }
-    } catch (e) {
-      // ListModels failed, will fallback to list below
-    }
-
-    // Comprehensive fallback candidate list covering all modern Gemini versions
-    const fallbackModels = [
+    // Priority models for modern Gemini API (Fast, resilient, low latency)
+    const targetModels = [
       'gemini-2.0-flash',
-      'gemini-2.0-flash-lite',
-      'gemini-2.0-flash-001',
       'gemini-2.5-flash',
-      'gemini-2.5-flash-lite',
-      'gemini-3.5-flash-lite',
-      'gemini-3.8-flash',
-      'gemini-1.5-flash',
-      'gemini-1.5-flash-latest',
-      'gemini-1.5-pro'
+      'gemini-2.0-flash-lite',
+      'gemini-1.5-flash'
     ];
-
-    const modelsToTry = [...new Set([...candidateModels, ...fallbackModels])];
 
     let lastError = null;
     let resultText = '';
     let usedModel = '';
 
-    for (const model of modelsToTry) {
+    for (const model of targetModels) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const ctrl = new AbortController();
+      const tid = setTimeout(() => ctrl.abort(), 7000);
+
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-        
-        // 1. Try with modern system_instruction
-        let payload = {
+        const payload = {
           system_instruction: {
             parts: [{ text: systemInstruction }]
           },
@@ -140,18 +195,36 @@ Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jang
           }
         };
 
-        let res = await fetch(url, {
+        const res = await fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'x-goog-api-key': apiKey
           },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
+          signal: ctrl.signal
         });
+        clearTimeout(tid);
 
-        // 2. If system_instruction is not supported (HTTP 400), retry by embedding instruction in contents
+        // If Google rejects credentials with 401 or 403, FAIL FAST!
+        // Do NOT loop through other models because the API key itself is invalid.
+        if (res.status === 401 || res.status === 403) {
+          const errJson = await res.json().catch(() => ({}));
+          const authMsg = errJson.error?.message || 'API key not valid. Please pass a valid API key.';
+          return {
+            statusCode: 401,
+            headers,
+            body: JSON.stringify({
+              error: 'AUTH_FAILED',
+              status: res.status,
+              message: authMsg
+            })
+          };
+        }
+
+        // If system_instruction is not supported (HTTP 400), retry embedded in contents
         if (res.status === 400) {
-          payload = {
+          const retryPayload = {
             contents: [
               {
                 role: 'user',
@@ -163,17 +236,29 @@ Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jang
               maxOutputTokens: 2048
             }
           };
-          res = await fetch(url, {
+
+          const retryRes = await fetch(url, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'x-goog-api-key': apiKey
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(retryPayload)
           });
+
+          const retryJson = await retryRes.json().catch(() => ({}));
+          if (retryRes.ok) {
+            const candidate = retryJson.candidates?.[0];
+            const text = candidate?.content?.parts?.[0]?.text;
+            if (text) {
+              resultText = text;
+              usedModel = model;
+              break;
+            }
+          }
         }
 
-        const json = await res.json();
+        const json = await res.json().catch(() => ({}));
         if (!res.ok) {
           throw new Error(json.error?.message || `HTTP status ${res.status}`);
         }
@@ -186,6 +271,7 @@ Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jang
           break;
         }
       } catch (err) {
+        clearTimeout(tid);
         lastError = err;
       }
     }
