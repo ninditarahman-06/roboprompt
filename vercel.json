@@ -4,6 +4,10 @@
   "outputDirectory": ".",
   "rewrites": [
     {
+      "source": "/api/ai",
+      "destination": "/api/gemini"
+    },
+    {
       "source": "/.netlify/functions/gemini",
       "destination": "/api/gemini"
     }

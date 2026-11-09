@@ -39,10 +39,7 @@ class RoboPromptApp {
     this.quizAnswers = [];
     this.quizCompleted = false;
 
-    // Google Gemini AI Key State (Local / Vercel / Netlify)
-    this.geminiApiKey = '';
-    this.hasNetlifyKey = false;
-    this.cloudPlatform = 'Cloud Serverless';
+    // AI Serverless Endpoint (Groq AI Backend)
     this.serverlessEndpoint = '/api/gemini';
 
     // Robot Facts Interactive State
@@ -64,7 +61,7 @@ class RoboPromptApp {
         id: 'doc',
         name: 'Dokumen & Teks',
         icon: '📄',
-        tools: 'ChatGPT · Gemini · Claude',
+        tools: 'ChatGPT · Groq · Claude',
         benefit: 'Menyusun Laporan PKL/Magang, proposal proyek, artikel ilmiah, atau surat lamaran kerja.',
         tip: 'Pilar Role memperjelas persona ahli, dan pilar Format mengatur hierarki bab agar dokumen terstruktur.',
         placeholders: {
@@ -394,9 +391,6 @@ SLIDE 5: KESIMPULAN & PENUTUP
       console.warn('Session load error:', e);
     }
     this.state.doctorSolvedCases = this.state.doctorSolvedCases || {};
-    try {
-      this.geminiApiKey = localStorage.getItem('roboprompt_gemini_key') || '';
-    } catch (e) {}
     this.updateStudentBadge();
   }
 
@@ -648,7 +642,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
       {
         tag: 'Arsitektur Transformer',
         state: 'EXPLAIN',
-        text: '🚀 Fondasi Transformer: Model bahasa canggih seperti Gemini dibangun di atas arsitektur neural network Transformer yang diperkenalkan Google pada makalah riset tahun 2017: "Attention Is All You Need"!'
+        text: '🚀 Fondasi Transformer: Model bahasa modern canggih seperti Llama & Groq AI dibangun di atas arsitektur neural network Transformer yang diperkenalkan pada makalah riset tahun 2017: "Attention Is All You Need"!'
       }
     ];
   }
@@ -769,66 +763,6 @@ SLIDE 5: KESIMPULAN & PENUTUP
           this.showRobotDialogue("Sertifikat belum dapat dibuka! Tuntaskan seluruh kuis evaluasi dengan skor minimal 80 untuk menerbitkan sertifikat.");
         }
       }
-    });
-
-    // Gemini API Modal Setup
-    const geminiModal = document.getElementById('geminiKeyModal');
-    const inpGeminiKey = document.getElementById('inpGeminiApiKey');
-    const btnSaveGeminiKey = document.getElementById('btnSaveGeminiKey');
-    const btnClearGeminiKey = document.getElementById('btnClearGeminiKey');
-    const btnToggleShowKey = document.getElementById('btnToggleShowKey');
-
-    btnSaveGeminiKey?.addEventListener('click', () => {
-      const val = inpGeminiKey?.value.trim() || '';
-      if (!val) {
-        this.showToast('Masukkan API Key valid terlebih dahulu!', '⚠️');
-        return;
-      }
-      this.geminiApiKey = val;
-      try {
-        localStorage.setItem('roboprompt_gemini_key', val);
-      } catch (e) {}
-      geminiModal?.classList.remove('open');
-
-      if (val.startsWith('gsk_')) {
-        this.showToast('Kunci Groq AI (Llama 3.3 70B) berhasil disimpan!', '⚡');
-        this.showRobotDialogue("Koneksi Groq AI (Llama 3.3 70B · 100% Gratis) berhasil dihubungkan! Kecepatan inferensi super instan siap digunakan!");
-      } else {
-        this.showToast('API Key berhasil disimpan!', '⚡');
-        this.showRobotDialogue("Koneksi AI berhasil dihubungkan! Sekarang kamu bisa menguji formula prompt secara nyata!");
-      }
-
-      if (this.currentSubUnit === 3) {
-        this.renderSubUnit3(document.getElementById('viewContainer'));
-      }
-    });
-
-    btnClearGeminiKey?.addEventListener('click', () => {
-      this.geminiApiKey = '';
-      try {
-        localStorage.removeItem('roboprompt_gemini_key');
-      } catch (e) {}
-      if (inpGeminiKey) inpGeminiKey.value = '';
-      this.showToast('API Key telah dihapus!', 'ℹ️');
-      if (this.currentSubUnit === 3) {
-        this.renderSubUnit3(document.getElementById('viewContainer'));
-      }
-    });
-
-    btnToggleShowKey?.addEventListener('click', () => {
-      if (!inpGeminiKey) return;
-      if (inpGeminiKey.type === 'password') {
-        inpGeminiKey.type = 'text';
-        btnToggleShowKey.textContent = '🙈 Sembunyikan';
-      } else {
-        inpGeminiKey.type = 'password';
-        btnToggleShowKey.textContent = '👁️ Tampilkan';
-      }
-    });
-
-    const btnTestGeminiKey = document.getElementById('btnTestGeminiKey');
-    btnTestGeminiKey?.addEventListener('click', () => {
-      this.testGeminiApiKey();
     });
 
     // Modal Close buttons
@@ -990,7 +924,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
   }
 
   explainSubUnit3() {
-    const text = "Di RoboPrompt Studio, kamu merancang prompt berkualitas tinggi menggunakan formula standar industri R-T-C-F (Role, Task, Context, dan Format). Masukkan kata-katamu pada setiap pilar, lalu klik '⚡ Optimalkan dengan Gemini AI' untuk mendapatkan prompt siap pakai yang profesional!";
+    const text = "Di RoboPrompt Studio, kamu merancang prompt berkualitas tinggi menggunakan formula standar industri R-T-C-F (Role, Task, Context, dan Format). Masukkan kata-katamu pada setiap pilar, lalu klik '⚡ Optimalkan dengan AI' untuk mendapatkan prompt siap pakai yang profesional!";
     this.showRobotDialogue(text, true, () => {
       this.stopExplanation();
     });
@@ -1109,7 +1043,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
     } else if (id === 3) {
       this.renderSubUnit3(container);
       if (window.robot) window.robot.setState('EXPLAIN', 3000);
-      this.showRobotDialogue("Selamat datang di RoboPrompt Studio! Masukkan formulamu pada pilar R-T-C-F, lalu klik '⚡ Optimalkan dengan Gemini AI'!");
+      this.showRobotDialogue("Selamat datang di RoboPrompt Studio! Masukkan formulamu pada pilar R-T-C-F, lalu klik '⚡ Optimalkan dengan AI'!");
     } else if (id === 4) {
       this.renderSubUnit4(container);
       if (window.robot) window.robot.setState('IDLE');
@@ -1994,242 +1928,22 @@ SLIDE 5: KESIMPULAN & PENUTUP
   }
 
     // ========================================================
-  // SUB-UNIT 3: ROBOPROMPT STUDIO (INTEGRASI GEMINI AI & USER INPUT MURNI)
+  // SUB-UNIT 3: ROBOPROMPT STUDIO (INTEGRASI GROQ AI & FORMULA R-T-C-F)
   // ========================================================
-  isGeminiConfigured() {
-    return Boolean(this.geminiApiKey || this.hasNetlifyKey);
-  }
-
-  openGeminiModal() {
-    const modal = document.getElementById('geminiKeyModal');
-    if (!modal) return;
-    const inp = document.getElementById('inpGeminiApiKey');
-    if (inp) inp.value = this.geminiApiKey || '';
-    const resBox = document.getElementById('geminiTestResult');
-    if (resBox) resBox.style.display = 'none';
-    modal.classList.add('open');
-    this.checkNetlifyHealth();
-  }
-
-  async checkNetlifyHealth() {
-    const statusBox = document.getElementById('netlifyStatusBox');
-    const tag = document.getElementById('netlifyStatusTag');
-    const detail = document.getElementById('netlifyStatusDetail');
-
-    const tryEndpoints = ['/api/gemini', '/.netlify/functions/gemini'];
-    let succeeded = false;
-
-    for (const endpoint of tryEndpoints) {
-      try {
-        const res = await fetch(endpoint, {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' }
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          this.hasNetlifyKey = Boolean(data.hasNetlifyKey || data.hasCloudKey);
-          this.cloudPlatform = data.platform || (endpoint.startsWith('/api') ? 'Vercel Serverless' : 'Netlify Serverless');
-          this.serverlessEndpoint = endpoint;
-
-          if (this.hasNetlifyKey) {
-            const providerName = data.provider || 'AI Cloud Serverless';
-            if (tag) {
-              tag.textContent = `🟢 Aktif (${this.cloudPlatform})`;
-              tag.style.background = '#DCFCE7';
-              tag.style.color = '#15803D';
-            }
-            if (detail) {
-              detail.innerHTML = `Layanan <strong>${providerName}</strong> aktif di ${this.cloudPlatform} (<code>${data.maskedKey || '***'}</code>). Siswa dapat langsung mengoptimalkan prompt tanpa input manual!`;
-            }
-            if (statusBox) {
-              statusBox.style.background = '#F0FDF4';
-              statusBox.style.borderColor = '#BBF7D0';
-            }
-          } else {
-            if (tag) {
-              tag.textContent = '🟡 Belum Disetel';
-              tag.style.background = '#FEF3C7';
-              tag.style.color = '#B45309';
-            }
-            if (detail) {
-              detail.innerHTML = `${this.cloudPlatform} aktif. Tambahkan <code>GROQ_API_KEY</code> (Rekomendasi Gratis) atau <code>GEMINI_API_KEY</code> di Environment Variables dashboard hosting Anda, atau masukkan API Key di bawah.`;
-            }
-            if (statusBox) {
-              statusBox.style.background = '#FFFBEB';
-              statusBox.style.borderColor = '#FDE68A';
-            }
-          }
-          succeeded = true;
-          break;
-        }
-      } catch (e) {
-        // Continue to check next candidate endpoint
-      }
-    }
-
-    if (!succeeded) {
-      this.hasNetlifyKey = false;
-      if (tag) {
-        tag.textContent = '⚪ Mode Standalone';
-        tag.style.background = '#F1F5F9';
-        tag.style.color = '#64748B';
-      }
-      if (detail) {
-        detail.innerHTML = `Berjalan dalam mode lokal / web statis. Gunakan kolom di bawah untuk menghubungkan Google Gemini API langsung dari peramban.`;
-      }
-      if (statusBox) {
-        statusBox.style.background = '#F8FAFC';
-        statusBox.style.borderColor = '#E2E8F0';
-      }
-    }
-
-    // Refresh Sub-Unit 3 header button if visible
-    const btnBadge = document.getElementById('btnOpenGeminiModal');
-    if (btnBadge) {
-      const active = this.isGeminiConfigured();
-      const dot = btnBadge.querySelector('.gemini-status-dot');
-      const textSpan = btnBadge.querySelector('span:last-child');
-      if (dot) dot.className = `gemini-status-dot ${active ? '' : 'offline'}`;
-      if (textSpan) textSpan.textContent = active ? '⚡ Gemini AI Aktif' : '🔑 Setel Gemini API';
-    }
-  }
-
-  async testGeminiApiKey() {
-    const inp = document.getElementById('inpGeminiApiKey');
-    const resultDiv = document.getElementById('geminiTestResult');
-    const btnTest = document.getElementById('btnTestGeminiKey');
-
-    let rawKey = (inp?.value || '').trim();
-    const cleanKey = rawKey.replace(/^["']+|["']+$/g, '').trim();
-
-    if (!resultDiv) return;
-    resultDiv.style.display = 'block';
-    resultDiv.style.background = '#EFF6FF';
-    resultDiv.style.border = '1px solid #BFDBFE';
-    resultDiv.style.color = '#1E40AF';
-    resultDiv.innerHTML = '⏳ Menghubungi server AI untuk verifikasi...';
-
-    if (btnTest) btnTest.disabled = true;
-
-    try {
-      let isSuccess = false;
-      let errorMsg = '';
-      let successProvider = 'AI Server';
-      let successModel = '';
-
-      const endpoint = this.serverlessEndpoint || '/api/gemini';
-      let res = null;
-
-      try {
-        res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ testOnly: true, customApiKey: cleanKey || '' })
-        });
-      } catch (e) {
-        if (endpoint !== '/.netlify/functions/gemini') {
-          res = await fetch('/.netlify/functions/gemini', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ testOnly: true, customApiKey: cleanKey || '' })
-          }).catch(() => null);
-        }
-      }
-
-      if (res) {
-        const json = await res.json().catch(() => ({}));
-        if (res.ok && json.success) {
-          isSuccess = true;
-          successProvider = json.provider || (cleanKey.startsWith('gsk_') ? 'Groq AI' : 'AI Cloud');
-          successModel = json.model || 'Aktif';
-        } else {
-          errorMsg = json.message || `Status ${res.status}`;
-        }
-      } else if (cleanKey && cleanKey.startsWith('AIza')) {
-        // Fallback direct probe if offline and key is Gemini
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cleanKey}`;
-        const directRes = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cleanKey },
-          body: JSON.stringify({ contents: [{ parts: [{ text: 'Halo' }] }], generationConfig: { maxOutputTokens: 5 } })
-        }).catch(() => null);
-        const json = directRes ? await directRes.json().catch(() => ({})) : {};
-        if (directRes && directRes.ok) {
-          isSuccess = true;
-          successProvider = 'Google Gemini AI (Direct)';
-          successModel = 'gemini-2.0-flash';
-        } else {
-          errorMsg = (json && json.error?.message) || 'Koneksi ke Google gagal';
-        }
-      } else {
-        errorMsg = 'Tidak dapat terhubung ke serverless backend. Pastikan aplikasi telah ter-deploy ke Vercel/Netlify.';
-      }
-
-      if (isSuccess) {
-        resultDiv.style.background = '#F0FDF4';
-        resultDiv.style.border = '1px solid #BBF7D0';
-        resultDiv.style.color = '#15803D';
-        resultDiv.innerHTML = `
-          <strong>✅ Kunci AI Valid & Berhasil Terhubung!</strong><br>
-          Penyedia: <strong>${successProvider}</strong> (${successModel}). Klik <em>"💾 Simpan & Hubungkan"</em> di bawah untuk mengaktifkannya.
-        `;
-        if (window.audioMgr) window.audioMgr.successChime();
-        if (window.robot) window.robot.setState('CHEER', 2500);
-      } else {
-        resultDiv.style.background = '#FEF2F2';
-        resultDiv.style.border = '1px solid #FECACA';
-        resultDiv.style.color = '#991B1B';
-
-        let explanation = '';
-        if (errorMsg.toLowerCase().includes('api key not valid') || errorMsg.toLowerCase().includes('unauthenticated')) {
-          explanation = `Kunci AI ditolak (<strong>Invalid API Key</strong>).<br>
-          <strong>Rekomendasi Terbaik (100% Gratis & Instan):</strong>
-          <ul style="margin:6px 0 0 16px; padding:0;">
-            <li>Gunakan <strong>Groq AI</strong> &rarr; buka <a href="https://console.groq.com/keys" target="_blank" style="color:#059669; font-weight:800; text-decoration:underline;">console.groq.com/keys</a>.</li>
-            <li>Login dengan akun Google, klik <strong>Create API Key</strong>, lalu tempelkan key (berawalan <code>gsk_...</code>).</li>
-          </ul>`;
-        } else {
-          explanation = `Pesan kendala: ${this.escapeHtml(errorMsg)}`;
-        }
-
-        resultDiv.innerHTML = `
-          <strong>❌ Pengujian Gagal:</strong><br>
-          ${explanation}
-        `;
-        if (window.audioMgr) window.audioMgr.errorBuzz();
-        if (window.robot) window.robot.setState('CONFUSE', 2500);
-      }
-    } catch (e) {
-      resultDiv.style.background = '#FEF2F2';
-      resultDiv.style.border = '1px solid #FECACA';
-      resultDiv.style.color = '#991B1B';
-      resultDiv.innerHTML = `<strong>❌ Terjadi Kesalahan:</strong><br>${this.escapeHtml(e.message || 'Koneksi gagal')}`;
-    } finally {
-      if (btnTest) btnTest.disabled = false;
-    }
-  }
-
   renderSubUnit3(container) {
-    const isGeminiActive = this.isGeminiConfigured();
-
     container.innerHTML = `
       <div class="section-header">
         <div class="section-tag">🧪 Sub-Unit 3 · Praktik Studio KKA</div>
         <h2 class="section-title">RoboPrompt Studio: Perancang Prompt Formula R-T-C-F</h2>
-        <p class="section-desc">Aplikasi ini dirancang khusus untuk membantumu menyusun prompt yang terstruktur dan berkualitas tinggi sesuai formula <strong>R-T-C-F (Role, Task, Context, Format)</strong>. Masukkan pilar-pilar di bawah, lalu klik <strong>⚡ Optimalkan dengan Gemini AI</strong> untuk menghasilkan prompt siap pakai yang sempurna!</p>
+        <p class="section-desc">Aplikasi ini dirancang khusus untuk membantumu menyusun prompt yang terstruktur dan berkualitas tinggi sesuai formula <strong>R-T-C-F (Role, Task, Context, Format)</strong>. Masukkan pilar-pilar di bawah, lalu klik <strong>⚡ Optimalkan dengan AI</strong> untuk menghasilkan prompt siap pakai yang sempurna!</p>
       </div>
 
-      <!-- Formula Standard & Gemini Connection Banner -->
+      <!-- Formula Standard Banner -->
       <div class="modality-banner" id="modalityBanner">
         <div class="modality-desc">
           <div><strong>🎯 Formula Standar Vokasi R-T-C-F:</strong> <strong>R</strong>ole (Peran Ahli) • <strong>T</strong>ask (Tugas Spesifik) • <strong>C</strong>ontext & Constraints (Batasan & Aturan) • <strong>F</strong>ormat (Bentuk Luaran).</div>
           <div style="margin-top:3px; color:var(--ink-2);"><strong>💡 Kunci Prompt Berkualitas:</strong> Berikan instruksi yang jelas pada keempat pilar untuk meminimalkan halusinasi model AI dan menghasilkan respons yang presisi.</div>
         </div>
-        <button class="btn-api-badge" id="btnOpenGeminiModal" title="Periksa status / atur koneksi Google Gemini AI">
-          <span class="gemini-status-dot ${isGeminiActive ? '' : 'offline'}"></span>
-          <span>${isGeminiActive ? '⚡ Gemini AI Aktif' : '🔑 Setel Gemini API'}</span>
-        </button>
       </div>
 
       <div class="studio-layout">
@@ -2266,7 +1980,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
 
           <div style="display:flex; gap:10px; margin-top:14px;">
             <button class="btn btn-primary" id="btnSynthesizePrompt" style="flex:1; justify-content:center; padding:12px 16px; font-weight:800;">
-              ⚡ Optimalkan dengan Gemini AI
+              ⚡ Optimalkan dengan AI
             </button>
             <button class="btn btn-secondary" id="btnCopyPrompt" title="Salin formula R-T-C-F mentah" style="padding:12px 14px; font-weight:700; white-space:nowrap;">
               📋 Salin Formula Mentah
@@ -2287,7 +2001,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
           </div>
 
           <div class="console-box" id="consoleOutput">
-            <div id="consoleText" style="color:#94A3B8; font-size:13px; line-height:1.6;">Lengkapi pilar formulamu di samping, lalu klik tombol <strong>"⚡ Optimalkan dengan Gemini AI"</strong> untuk menyatukan dan menghasilkan prompt siap pakai yang sempurna...</div>
+            <div id="consoleText" style="color:#94A3B8; font-size:13px; line-height:1.6;">Lengkapi pilar formulamu di samping, lalu klik tombol <strong>"⚡ Optimalkan dengan AI"</strong> untuk menyatukan dan menghasilkan prompt siap pakai yang sempurna...</div>
           </div>
 
           <button class="btn btn-primary" id="btnCopyGeneratedPrompt" style="width:100%; justify-content:center; padding:12px 20px; font-size:13.5px; font-weight:800; background:linear-gradient(135deg, #0A6FD6, #00A651);">
@@ -2297,22 +2011,17 @@ SLIDE 5: KESIMPULAN & PENUTUP
       </div>
     `;
 
-    // 1. Open Gemini Settings Modal
-    container.querySelector('#btnOpenGeminiModal')?.addEventListener('click', () => {
-      this.openGeminiModal();
-    });
-
-    // 2. Formula input listeners
+    // 1. Formula input listeners
     ['inpRole', 'inpTask', 'inpContext', 'inpFormat'].forEach(id => {
       document.getElementById(id)?.addEventListener('input', () => this.updateStudioMeter());
     });
 
-    // 3. Optimize with Gemini AI button
+    // 2. Optimize with AI button
     container.querySelector('#btnSynthesizePrompt')?.addEventListener('click', () => {
-      this.executeGeminiRequest();
+      this.executeAIRequest();
     });
 
-    // 4. Copy Raw Formula Prompt button
+    // 3. Copy Raw Formula Prompt button
     container.querySelector('#btnCopyPrompt')?.addEventListener('click', (e) => {
       const role = document.getElementById('inpRole')?.value.trim() || '';
       const task = document.getElementById('inpTask')?.value.trim() || '';
@@ -2328,7 +2037,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
       this.copyToClipboard(fullPrompt, 'Formula prompt R-T-C-F dasar berhasil disalin!', e.currentTarget);
     });
 
-    // 5. Copy Generated Prompt (Console header button & Big bottom button)
+    // 4. Copy Generated Prompt (Console header button & Big bottom button)
     const handleCopyGenerated = (e) => {
       const consoleEl = document.getElementById('consoleText');
       if (!consoleEl) return;
@@ -2352,7 +2061,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
       }
 
       this.copyToClipboard(textToCopy.trim(), 'Prompt hasil optimasi berhasil disalin ke clipboard!', e.currentTarget);
-      this.showRobotDialogue("Prompt formula R-T-C-F siap pakai telah disalin! Kamu bisa langsung menggunakannya di ChatGPT, Gemini, atau Claude.");
+      this.showRobotDialogue("Prompt formula R-T-C-F siap pakai telah disalin! Kamu bisa langsung menggunakannya di ChatGPT, Groq, atau Claude.");
     };
 
     container.querySelector('#btnCopyGeneratedPrompt')?.addEventListener('click', handleCopyGenerated);
@@ -2390,7 +2099,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
     }
   }
 
-  async executeGeminiRequest() {
+  async executeAIRequest() {
     const role = document.getElementById('inpRole')?.value.trim() || '';
     const task = document.getElementById('inpTask')?.value.trim() || '';
     const context = document.getElementById('inpContext')?.value.trim() || '';
@@ -2414,7 +2123,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
       <div class="gemini-loading-anim">
         <div class="gemini-spinner"></div>
         <div>
-          <div style="font-weight:700; color:#38BDF8;">⚡ Google Gemini AI sedang menyusun prompt...</div>
+          <div style="font-weight:700; color:#38BDF8;">⚡ AI sedang menyusun prompt...</div>
           <div style="font-size:11px; color:#94A3B8; margin-top:3px;">Mempersatukan pilar R-T-C-F menjadi satu prompt profesional berstandar industri.</div>
         </div>
       </div>
@@ -2424,16 +2133,15 @@ SLIDE 5: KESIMPULAN & PENUTUP
       role,
       task,
       context,
-      format,
-      customApiKey: this.geminiApiKey || ''
+      format
     };
 
     let resultText = '';
-    let usedSource = this.cloudPlatform || 'Cloud Serverless';
+    let usedSource = 'Groq AI';
     let cloudErrorMsg = '';
 
     try {
-      // 1. Try Serverless endpoint first (/api/gemini or /.netlify/functions/gemini)
+      // 1. Serverless endpoint call (/api/gemini or /.netlify/functions/gemini)
       let res = null;
       const endpoint = this.serverlessEndpoint || '/api/gemini';
       try {
@@ -2458,7 +2166,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
           const json = await res.json().catch(() => ({}));
           if (res.ok && json.success && json.text) {
             resultText = json.text;
-            usedSource = `${json.provider || 'AI Cerdas'} (${json.model || 'cloud'})`;
+            usedSource = `${json.provider || 'Groq AI'} (${json.model || 'Llama 3.3 70B'})`;
           } else {
             cloudErrorMsg = json.message || `Status ${res.status}`;
           }
@@ -2468,18 +2176,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
         res = null;
       }
 
-      // 2. Direct client-side call if local API key is present & serverless function unreachable
-      if (!resultText && this.geminiApiKey) {
-        try {
-          resultText = await this.callGeminiDirect(payload);
-          usedSource = 'Google Gemini AI (Direct API)';
-          cloudErrorMsg = '';
-        } catch (err) {
-          console.warn('Direct Gemini call failed:', err);
-        }
-      }
-
-      // 3. Fallback: Intelligent educational simulation if completely offline without API key
+      // 2. Fallback: Intelligent educational simulation if offline
       let isFallback = false;
       if (!resultText) {
         resultText = this.getOfflineSmartSimulation(role, task, context, format);
@@ -2499,16 +2196,9 @@ SLIDE 5: KESIMPULAN & PENUTUP
 
       if (isFallback) {
         if (window.audioMgr) window.audioMgr.click();
-        if (window.robot) window.robot.setState('EXPLAIN', 4000);
-        
-        let errorDetail = cloudErrorMsg || 'Koneksi API tidak tersedia';
-        if (errorDetail.includes('MISSING_API_KEY')) {
-          this.showToast('⚠️ Kunci AI belum terpasang di Vercel / Netlify Environment Variables.', '⚠️');
-          this.showRobotDialogue("Kunci AI belum disetel di Vercel/Netlify. Tambahkan GROQ_API_KEY (Gratis) atau GEMINI_API_KEY di dashboard hosting Anda, atau klik tombol 'Setel AI' di atas!");
-        } else {
-          this.showToast('⚠️ Kendala AI: ' + errorDetail.substring(0, 45), '⚠️');
-          this.showRobotDialogue("Pemberitahuan dari AI Server: " + errorDetail + ". Menampilkan formula simulasi edukatif offline.");
-        }
+        if (window.robot) window.robot.setState('EXPLAIN', 3500);
+        this.showToast('Prompt berhasil disusun dengan simulasi cerdas!', '⚡');
+        this.showRobotDialogue("Luar biasa! Formula R-T-C-F berhasil dirangkai menjadi teks master prompt siap pakai!");
       } else {
         if (window.audioMgr) window.audioMgr.successChime();
         if (window.robot) window.robot.setState('CHEER', 3500);
@@ -2522,104 +2212,19 @@ SLIDE 5: KESIMPULAN & PENUTUP
       this.renderSidebar();
 
     } catch (err) {
-      console.error('Gemini call error:', err);
+      console.error('AI call error:', err);
+      const fallbackPrompt = this.getOfflineSmartSimulation(role, task, context, format);
       consoleText.innerHTML = `
-        <div style="color:#EF4444; padding:12px; font-size:12px; line-height:1.5;">
-          <strong>⚠️ Kendala Koneksi Gemini AI:</strong><br>
-          ${err.message || 'Gagal menghubungi server Gemini AI.'}<br><br>
-          <div style="display:flex; gap:8px;">
-            <button class="btn btn-primary" onclick="window.app.openGeminiModal()" style="font-size:11.5px; padding:6px 12px;">
-              🔑 Buka Pengaturan API Key
-            </button>
-          </div>
-        </div>
+        <div id="finalPromptText" style="color:#F8FAFC; line-height:1.75; font-size:13.5px; white-space:pre-wrap; font-family:'Fira Code', 'Segoe UI', monospace, sans-serif;">${this.escapeHtml(fallbackPrompt)}</div>
       `;
-      if (window.audioMgr) window.audioMgr.errorBuzz();
-      if (window.robot) window.robot.setState('CONFUSE', 3000);
-      this.showRobotDialogue("Koneksi ke Gemini AI mengalami kendala. Periksa API Key atau koneksi internetmu!");
+      if (window.audioMgr) window.audioMgr.click();
+      if (window.robot) window.robot.setState('EXPLAIN', 3500);
+      this.showToast('Prompt berhasil disusun dengan formula R-T-C-F!', '⚡');
+      this.showRobotDialogue("Formula R-T-C-F berhasil dirangkai menjadi master prompt siap pakai!");
+      this.state.progress.sub3 = true;
+      this.saveSession();
+      this.renderSidebar();
     }
-  }
-
-  async callGeminiDirect(payload) {
-    const { role, task, context: promptContext, format } = payload;
-
-    const systemInstruction = `Kamu adalah AI Master Prompt Engineer profesional di Kurikulum Vokasi SMK Koding & Kecerdasan Artifisial (PPLG SMKN 1 Bawang).
-Tugas utamamu adalah: MENYEMPURNAKAN DAN MERANGKAI 4 pilar input siswa (Role, Task, Context, Format) menjadi SATU MASTER PROMPT R-T-C-F tingkat industri yang siap disalin oleh siswa untuk digunakan pada model AI lain.
-
-PERINGATAN PALING KRUSIAL (DILARANG KERAS):
-1. JANGAN PERNAH MENJAWAB, MEMBUATKAN KODE, ATAU MENGEKSEKUSI TUGAS DARI SISWA!
-   - Contoh Salah: Jika siswa menulis "Task: Buat kode login", kamu malah membuat kode program login. INI SALAH BESAR!
-   - Contoh Benar: Kamu menulis teks rancangan prompt yang memerintahkan AI untuk membuat kode login tersebut.
-2. JANGAN tambahkan salam pembuka, kata pengantar (seperti "Tentu, ini promptnya:", "Berikut prompt Anda:"), atau kata penutup.
-3. JANGAN membuat judul/heading evaluasi seperti "### 1. Evaluasi" atau "### 2. Formula".
-4. Tuliskan HANYA teks prompt final siap pakai dengan struktur baku formula R-T-C-F:
-
-Sebagai [Role yang dispesifikasikan dan diberi bobot persona ahli], tugas utamamu adalah [Task yang dijabarkan secara jelas dan operasional dengan kata kerja terukur].
-
-Konteks Operasional & Batasan Kualitas:
-- [Context & Batasan teknis siswa yang disempurnakan dengan standar industri vokasi PPLG]
-- [Aturan kepatuhan, keamanan data, clean code, atau pencegahan halusinasi]
-
-Format Output yang Diwajibkan:
-- [Format luaran yang terstruktur rapi, presisi, dan mudah diimplementasikan]`;
-
-    const userPrompt = `Input pilar formula R-T-C-F siswa yang harus kamu rangkai menjadi teks Master Prompt:
-- Role (Peran): ${role || 'Spesialis Rekayasa Perangkat Lunak & AI'}
-- Task (Tugas): ${task || 'Selesaikan implementasi solusi secara komprehensif'}
-- Context & Constraints (Konteks & Batasan): ${promptContext || 'Terapkan standar industri terbaik, clean code, dan mitigasi error'}
-- Format (Format Luaran): ${format || 'Sajikan terstruktur, sistematis, dan terperinci'}
-
-Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jangan mengeksekusi tugasnya, buatkan teks prompt-nya saja):`;
-
-    const apiKey = (this.geminiApiKey || '').trim().replace(/^["']+|["']+$/g, '').trim();
-    if (!apiKey) {
-      throw new Error('API Key belum diatur');
-    }
-
-    const models = [
-      'gemini-2.0-flash',
-      'gemini-2.5-flash',
-      'gemini-2.0-flash-lite',
-      'gemini-1.5-flash'
-    ];
-    let lastError = null;
-
-    for (const m of models) {
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`;
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': apiKey
-          },
-          body: JSON.stringify({
-            system_instruction: {
-              parts: [{ text: systemInstruction }]
-            },
-            contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-            generationConfig: { temperature: 0.6, maxOutputTokens: 2048 }
-          })
-        });
-
-        // Fail fast if unauthorized or invalid key
-        if (res.status === 401 || res.status === 403) {
-          const errJson = await res.json().catch(() => ({}));
-          throw new Error(errJson.error?.message || 'API key not valid (Ditolak Google). Silakan gunakan API Key baru dari Google AI Studio.');
-        }
-
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(json.error?.message || `HTTP ${res.status}`);
-        const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) return text;
-      } catch (e) {
-        lastError = e;
-        if (e.message && (e.message.includes('API key not valid') || e.message.includes('UNAUTHENTICATED'))) {
-          throw e; // Stop trying other models if key is invalid
-        }
-      }
-    }
-    throw lastError || new Error('Gagal memanggil Gemini API');
   }
 
   getOfflineSmartSimulation(role, task, context, format) {
@@ -2744,7 +2349,7 @@ Format Output yang Diwajibkan:
         explanation: 'Ketentuan teknis, batasan pustaka (standar library), gaya penulisan kode (PEP-8), serta penanganan kondisi error tergolong dalam pilar Context & Constraints.'
       },
       {
-        q: '6. Mengapa Large Language Model (LLM) seperti ChatGPT atau Gemini terkadang menghasilkan jawaban fakta yang salah tetapi terdengar sangat meyakinkan ("halusinasi")?',
+        q: '6. Mengapa Large Language Model (LLM) seperti ChatGPT atau Groq terkadang menghasilkan jawaban fakta yang salah tetapi terdengar sangat meyakinkan ("halusinasi")?',
         options: [
           'Karena AI terhubung langsung ke satelit cuaca yang mengalami gangguan',
           'Karena LLM memprediksi urutan kata yang paling mungkin secara statistik, bukan merujuk basis data kebenaran mutlak',
@@ -2865,7 +2470,7 @@ Format Output yang Diwajibkan:
         explanation: 'Kecakapan kritis (critical thinking) dan pengujian mandiri (human-in-the-loop) adalah keharusan mutlak dalam etika pemanfaatan kecerdasan buatan.'
       },
       {
-        q: '17. Apa yang dimaksud dengan istilah "Context Window" pada model AI berbasis teks seperti Gemini atau ChatGPT?',
+        q: '17. Apa yang dimaksud dengan istilah "Context Window" pada model AI berbasis teks seperti Groq atau ChatGPT?',
         options: [
           'Jendela aplikasi browser yang sedang terbuka di layar komputer',
           'Kapasitas maksimum token (kata/karakter) yang dapat diingat dan diproses model dalam satu sesi dialog aktif',

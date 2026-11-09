@@ -1,7 +1,7 @@
 {
   "name": "roboprompt-kka",
   "version": "1.0.0",
-  "description": "Media Pembelajaran Interaktif Koding dan Kecerdasan Artifisial (KKA) SMK Fase F berbasis Formula R-T-C-F dengan Mentor 3D Robot & Google Gemini AI",
+  "description": "Media Pembelajaran Interaktif Koding dan Kecerdasan Artifisial (KKA) SMK Fase F berbasis Formula R-T-C-F dengan Mentor 3D Robot & Groq AI",
   "main": "index.html",
   "scripts": {
     "start": "npx serve .",
@@ -10,7 +10,7 @@
   },
   "keywords": [
     "roboprompt",
-    "gemini-ai",
+    "groq-ai",
     "smk",
     "vokasi",
     "prompt-engineering",

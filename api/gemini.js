@@ -1,50 +1,43 @@
 /**
- * Vercel Serverless Function: Multi-Provider AI Proxy (Groq & Google Gemini)
+ * Vercel Serverless Function: Groq AI Proxy (Llama 3.3 70B)
  * RoboPrompt - KKA Fase F (PPLG SMKN 1 Bawang)
  * 
- * Supports 100% FREE Groq AI (Llama 3.3 70B) & Google Gemini AI.
- * Safely accesses GROQ_API_KEY or GEMINI_API_KEY from Environment Variables.
+ * 100% Free Inference with Groq LPU.
+ * Safely accesses GROQ_API_KEY from Vercel Environment Variables.
  */
 
 module.exports = async function handler(req, res) {
   // CORS Headers for secure cross-origin interaction
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-goog-api-key, authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, authorization');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  // Helper to sanitize and trim API keys (strips accidental surrounding quotes/spaces)
   const sanitizeKey = (key) => {
     if (!key) return '';
     return key.trim().replace(/^["']+|["']+$/g, '').trim();
   };
 
-  const groqEnv = sanitizeKey(process.env.GROQ_API_KEY);
-  const geminiEnv = sanitizeKey(process.env.GEMINI_API_KEY);
+  const groqKey = sanitizeKey(process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY);
 
-  // GET: Healthcheck & Environment Variable configuration probe
+  // GET: Healthcheck probe
   if (req.method === 'GET') {
-    const activeEnv = groqEnv || geminiEnv;
-    const hasKey = Boolean(activeEnv && activeEnv.length > 5);
-    const activeProvider = groqEnv 
-      ? 'Groq AI (Llama 3.3 70B · 100% Gratis)' 
-      : (geminiEnv ? 'Google Gemini AI' : 'Belum Terpasang');
-    
+    const hasKey = Boolean(groqKey && groqKey.length > 5);
     let masked = '';
     if (hasKey) {
-      masked = activeEnv.substring(0, 5) + '...' + activeEnv.substring(activeEnv.length - 4);
+      masked = groqKey.substring(0, 5) + '...' + groqKey.substring(groqKey.length - 4);
     }
 
     return res.status(200).json({
       status: 'ok',
-      service: 'RoboPrompt AI Proxy (SMKN 1 Bawang)',
+      service: 'RoboPrompt AI Proxy (PPLG SMKN 1 Bawang)',
       platform: 'Vercel Serverless',
-      provider: activeProvider,
+      provider: 'Groq AI (Llama 3.3 70B)',
+      hasKey: hasKey,
       hasCloudKey: hasKey,
-      hasNetlifyKey: hasKey, // backward compatibility
       maskedKey: masked
     });
   }
@@ -65,136 +58,60 @@ module.exports = async function handler(req, res) {
       data = {};
     }
 
-    const { role, task, context: promptContext, format, customApiKey, testOnly } = data;
-    const userKey = sanitizeKey(customApiKey);
+    const { role, task, context: promptContext, format, testOnly } = data;
 
-    // Determine provider and key
-    let selectedProvider = '';
-    let apiKey = '';
-
-    if (userKey) {
-      if (userKey.startsWith('gsk_')) {
-        selectedProvider = 'groq';
-        apiKey = userKey;
-      } else if (userKey.startsWith('AIza')) {
-        selectedProvider = 'gemini';
-        apiKey = userKey;
-      } else if (userKey.length > 25) {
-        selectedProvider = groqEnv ? 'groq' : 'gemini';
-        apiKey = userKey;
-      }
-    }
-
-    if (!apiKey) {
-      if (groqEnv) {
-        selectedProvider = 'groq';
-        apiKey = groqEnv;
-      } else if (geminiEnv) {
-        selectedProvider = 'gemini';
-        apiKey = geminiEnv;
-      }
-    }
-
-    if (!apiKey) {
+    if (!groqKey) {
       return res.status(400).json({
         error: 'MISSING_API_KEY',
-        message: 'Kunci AI (GROQ_API_KEY atau GEMINI_API_KEY) belum terpasang di Environment Variables Vercel atau pengaturan aplikasi.'
+        message: 'GROQ_API_KEY belum terpasang di Environment Variables Vercel.'
       });
     }
 
-    // Quick verification mode for "Uji Koneksi"
+    // Quick verification mode for testing connection
     if (testOnly) {
-      if (selectedProvider === 'groq') {
-        const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 7000);
-        try {
-          const testRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-              model: 'llama-3.3-70b-versatile',
-              messages: [{ role: 'user', content: 'Ping' }],
-              max_tokens: 5
-            }),
-            signal: ctrl.signal
-          });
-          clearTimeout(tid);
-
-          const testJson = await testRes.json().catch(() => ({}));
-          if (!testRes.ok) {
-            const errMsg = testJson.error?.message || `HTTP ${testRes.status}`;
-            return res.status(testRes.status === 401 ? 401 : 400).json({
-              success: false,
-              error: 'TEST_FAILED',
-              provider: 'Groq AI',
-              status: testRes.status,
-              message: errMsg
-            });
-          }
-
-          return res.status(200).json({
-            success: true,
-            provider: 'Groq AI (Llama 3.3 70B)',
+      const ctrl = new AbortController();
+      const tid = setTimeout(() => ctrl.abort(), 7000);
+      try {
+        const testRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${groqKey}`
+          },
+          body: JSON.stringify({
             model: 'llama-3.3-70b-versatile',
-            message: 'Koneksi ke Groq AI (Llama 3.3 70B) 100% Valid & Super Cepat!'
-          });
-        } catch (e) {
-          clearTimeout(tid);
-          return res.status(500).json({
+            messages: [{ role: 'user', content: 'Ping' }],
+            max_tokens: 5
+          }),
+          signal: ctrl.signal
+        });
+        clearTimeout(tid);
+
+        const testJson = await testRes.json().catch(() => ({}));
+        if (!testRes.ok) {
+          const errMsg = testJson.error?.message || `HTTP ${testRes.status}`;
+          return res.status(testRes.status === 401 ? 401 : 400).json({
             success: false,
-            error: 'TEST_ERROR',
-            message: e.message || 'Koneksi ke server Groq gagal'
+            error: 'TEST_FAILED',
+            provider: 'Groq AI',
+            status: testRes.status,
+            message: errMsg
           });
         }
-      } else {
-        // Gemini test
-        const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-        const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 7000);
-        try {
-          const testRes = await fetch(testUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-goog-api-key': apiKey
-            },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: 'Ping' }] }],
-              generationConfig: { maxOutputTokens: 5 }
-            }),
-            signal: ctrl.signal
-          });
-          clearTimeout(tid);
 
-          const testJson = await testRes.json().catch(() => ({}));
-          if (!testRes.ok) {
-            const errMsg = testJson.error?.message || `HTTP ${testRes.status}`;
-            return res.status(testRes.status === 401 || testRes.status === 403 ? 401 : 400).json({
-              success: false,
-              error: 'TEST_FAILED',
-              provider: 'Google Gemini',
-              status: testRes.status,
-              message: errMsg
-            });
-          }
-
-          return res.status(200).json({
-            success: true,
-            provider: 'Google Gemini',
-            model: 'gemini-2.0-flash',
-            message: 'Koneksi ke Google Gemini AI berhasil diverifikasi!'
-          });
-        } catch (e) {
-          clearTimeout(tid);
-          return res.status(500).json({
-            success: false,
-            error: 'TEST_ERROR',
-            message: e.message || 'Koneksi ke server Google gagal'
-          });
-        }
+        return res.status(200).json({
+          success: true,
+          provider: 'Groq AI (Llama 3.3 70B)',
+          model: 'llama-3.3-70b-versatile',
+          message: 'Koneksi ke Groq AI (Llama 3.3 70B) 100% Valid & Super Cepat!'
+        });
+      } catch (e) {
+        clearTimeout(tid);
+        return res.status(500).json({
+          success: false,
+          error: 'TEST_ERROR',
+          message: e.message || 'Koneksi ke server Groq gagal'
+        });
       }
     }
 
@@ -226,166 +143,52 @@ Format Output yang Diwajibkan:
 
 Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jangan mengeksekusi tugasnya, buatkan teks prompt-nya saja):`;
 
-    // 1. If Groq Provider
-    if (selectedProvider === 'groq') {
-      const groqModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
-      let lastError = null;
-
-      for (const model of groqModels) {
-        const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 9000);
-        try {
-          const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-              model: model,
-              messages: [
-                { role: 'system', content: systemInstruction },
-                { role: 'user', content: userPrompt }
-              ],
-              temperature: 0.5,
-              max_tokens: 2048
-            }),
-            signal: ctrl.signal
-          });
-          clearTimeout(tid);
-
-          if (groqRes.status === 401) {
-            return res.status(401).json({
-              error: 'AUTH_FAILED',
-              message: 'Kunci Groq API tidak valid. Silakan dapatkan key baru gratis di console.groq.com'
-            });
-          }
-
-          const groqJson = await groqRes.json().catch(() => ({}));
-          if (!groqRes.ok) {
-            throw new Error(groqJson.error?.message || `HTTP ${groqRes.status}`);
-          }
-
-          const text = groqJson.choices?.[0]?.message?.content;
-          if (text) {
-            return res.status(200).json({
-              success: true,
-              text: text,
-              provider: 'Groq AI (100% Gratis)',
-              model: model
-            });
-          }
-        } catch (err) {
-          clearTimeout(tid);
-          lastError = err;
-        }
-      }
-
-      throw lastError || new Error('Gagal menghubungi Groq AI.');
-    }
-
-    // 2. If Gemini Provider
-    const targetModels = [
-      'gemini-2.0-flash',
-      'gemini-1.5-flash',
-      'gemini-1.5-pro'
-    ];
-
+    const groqModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
     let lastError = null;
-    let resultText = '';
-    let usedModel = '';
 
-    for (const model of targetModels) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    for (const model of groqModels) {
       const ctrl = new AbortController();
-      const tid = setTimeout(() => ctrl.abort(), 7000);
-
+      const tid = setTimeout(() => ctrl.abort(), 9000);
       try {
-        const payload = {
-          system_instruction: {
-            parts: [{ text: systemInstruction }]
-          },
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: userPrompt }]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.6,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 2048
-          }
-        };
-
-        const resGoogle = await fetch(url, {
+        const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-goog-api-key': apiKey
+            'Authorization': `Bearer ${groqKey}`
           },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({
+            model: model,
+            messages: [
+              { role: 'system', content: systemInstruction },
+              { role: 'user', content: userPrompt }
+            ],
+            temperature: 0.5,
+            max_tokens: 2048
+          }),
           signal: ctrl.signal
         });
         clearTimeout(tid);
 
-        if (resGoogle.status === 401 || resGoogle.status === 403) {
-          const errJson = await resGoogle.json().catch(() => ({}));
-          const authMsg = errJson.error?.message || 'API key not valid. Please pass a valid API key.';
+        if (groqRes.status === 401) {
           return res.status(401).json({
             error: 'AUTH_FAILED',
-            status: resGoogle.status,
-            message: authMsg
+            message: 'GROQ_API_KEY tidak valid. Silakan periksa di Project Settings Vercel.'
           });
         }
 
-        if (resGoogle.status === 400) {
-          const retryPayload = {
-            contents: [
-              {
-                role: 'user',
-                parts: [{ text: `${systemInstruction}\n\n---\n\n${userPrompt}` }]
-              }
-            ],
-            generationConfig: {
-              temperature: 0.6,
-              maxOutputTokens: 2048
-            }
-          };
-
-          const retryRes = await fetch(url, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-goog-api-key': apiKey
-            },
-            body: JSON.stringify(retryPayload)
-          });
-
-          const retryJson = await retryRes.json().catch(() => ({}));
-          if (retryRes.ok) {
-            const candidate = retryJson.candidates?.[0];
-            const text = candidate?.content?.parts?.[0]?.text;
-            if (text) {
-              resultText = text;
-              usedModel = model;
-              break;
-            }
-          }
+        const groqJson = await groqRes.json().catch(() => ({}));
+        if (!groqRes.ok) {
+          throw new Error(groqJson.error?.message || `HTTP ${groqRes.status}`);
         }
 
-        const json = await resGoogle.json().catch(() => ({}));
-        if (!resGoogle.ok) {
-          throw new Error(json.error?.message || `HTTP status ${resGoogle.status}`);
-        }
-
-        const candidate = json.candidates?.[0];
-        const text = candidate?.content?.parts?.[0]?.text;
+        const text = groqJson.choices?.[0]?.message?.content;
         if (text) {
-          resultText = text;
-          usedModel = model;
-          break;
+          return res.status(200).json({
+            success: true,
+            text: text,
+            provider: 'Groq AI (Llama 3.3 70B)',
+            model: model
+          });
         }
       } catch (err) {
         clearTimeout(tid);
@@ -393,16 +196,8 @@ Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jang
       }
     }
 
-    if (!resultText) {
-      throw lastError || new Error('Tidak ada respon yang diterima dari Gemini API.');
-    }
+    throw lastError || new Error('Gagal menghubungi server Groq AI.');
 
-    return res.status(200).json({
-      success: true,
-      text: resultText,
-      provider: 'Google Gemini AI',
-      model: usedModel
-    });
   } catch (err) {
     return res.status(500).json({
       error: 'SERVER_ERROR',

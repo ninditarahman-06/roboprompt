@@ -1,9 +1,8 @@
 # RoboPrompt: Media Pembelajaran Interaktif KKA Fase F
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/deploy-status)](https://app.netlify.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Media Pembelajaran Interaktif **Koding dan Kecerdasan Artifisial (KKA)** untuk jenjang SMK Fase F berbasis formula standar industri **R-T-C-F** (*Role, Task, Context, Format*). Aplikasi ini mengadopsi standar antarmuka kanvas 16:9 resmi **Ruang Murid Kemendikdasmen**, dipandu oleh mentor **3D Robot Virtual ("Robo-Prompt")** berbasis WebGL/Three.js, dan terhubung langsung ke **Google Gemini AI**.
+Media Pembelajaran Interaktif **Koding dan Kecerdasan Artifisial (KKA)** untuk jenjang SMK Fase F berbasis formula standar industri **R-T-C-F** (*Role, Task, Context, Format*). Aplikasi ini mengadopsi standar antarmuka kanvas 16:9 resmi **Ruang Murid Kemendikdasmen**, dipandu oleh mentor **3D Robot Virtual ("Robo-Prompt")** berbasis WebGL/Three.js, dan terhubung langsung ke **Groq AI (Llama 3.3 70B)**.
 
 ---
 
@@ -21,11 +20,11 @@ Media Pembelajaran Interaktif **Koding dan Kecerdasan Artifisial (KKA)** untuk j
    - Mekanisme **Drag & Drop** native dan susun urutan 4 pilar R-T-C-F, dilengkapi kepingan pengecoh (*distractor*).
    - Sistem skor 100 poin (20 poin/kasus) dan penerbitan resep prompt sembuh.
 
-4. **Sub-Unit 3: RoboPrompt Studio (Powered by Google Gemini AI)**:
+4. **Sub-Unit 3: RoboPrompt Studio (Powered by Groq AI)**:
    - **Formula Builder Murni**: Pengguna memasukkan kata atau kalimat sendiri ke dalam slot Role, Task, Context, Format (R-T-C-F) berstandar industri vokasi PPLG.
-   - **Optimasi Cerdas Google Gemini AI**:
-     - *⚡ Optimalkan dengan Gemini AI*: Gemini menyatukan dan menyempurnakan keempat pilar R-T-C-F siswa menjadi satu teks prompt final yang terstruktur, kohesif, dan siap pakai secara langsung pada model AI.
-     - *📋 Salin Prompt*: Satu klik untuk menyalin prompt final hasil generasi AI ke clipboard untuk langsung digunakan di platform AI nyata (ChatGPT, Gemini, Claude, dsb).
+   - **Optimasi Cerdas AI**:
+     - *⚡ Optimalkan dengan AI*: Groq AI menyatukan dan menyempurnakan keempat pilar R-T-C-F siswa menjadi satu teks prompt final yang terstruktur, kohesif, dan siap pakai secara langsung pada model AI.
+     - *📋 Salin Prompt*: Satu klik untuk menyalin prompt final hasil generasi AI ke clipboard untuk langsung digunakan di platform AI nyata (ChatGPT, Groq, Claude, dsb).
 
 5. **Sub-Unit 4: Evaluasi & Kuis Cerdas (25 Soal & Ambang Batas Skor 80)**:
    - 25 butir soal studi kasus CBT (Computer Based Test) berbobot 4 poin per soal (maksimal 100).
@@ -34,62 +33,34 @@ Media Pembelajaran Interaktif **Koding dan Kecerdasan Artifisial (KKA)** untuk j
 
 ---
 
-## 🔑 Langkah 1: Mendapatkan Google Gemini API Key Gratis
+## 🔑 Langkah 1: Mendapatkan Groq API Key Gratis (100% Free)
 
-1. Kunjungi **Google AI Studio**: [https://aistudio.google.com/](https://aistudio.google.com/)
-2. Masuk menggunakan akun Google Anda.
-3. Klik tombol **"Get API key"** di menu navigasi kiri.
-4. Klik **"Create API key"** (pilih project baru atau project yang sudah ada).
-5. Salin string API key yang muncul (dimulai dengan `AIzaSy...`).
-6. *Simpan API Key ini dengan aman untuk digunakan pada langkah Netlify.*
+1. Kunjungi **Groq Cloud Console**: [https://console.groq.com/keys](https://console.groq.com/keys)
+2. Masuk menggunakan akun **Google** atau **GitHub** Anda.
+3. Klik tombol **"Create API key"**.
+4. Beri nama bebas (misalnya `roboprompt`), lalu salin key yang berawalan `gsk_...`.
+5. *API Key ini 100% gratis, bebas kartu kredit, dan menyediakan 14.400 request per hari.*
 
 ---
 
 ## 🐙 Langkah 2: Impor & Unggah Proyek ke GitHub
 
-### 1. Inisialisasi Git di Komputer Anda
-Buka Terminal / PowerShell di folder proyek ini (`d:\Aplikasi Buatan\RoboPrompt`):
-
 ```bash
-# Inisialisasi repository git lokal
-git init
-
-# Pastikan file .gitignore sudah terpasang agar API key tidak bocor
-git status
-
 # Tambahkan semua file ke git
 git add .
 
-# Buat commit perdana
-git commit -m "feat: initial commit RoboPrompt KKA with Gemini AI and Three.js"
-```
+# Buat commit
+git commit -m "feat: integrate Groq AI and clean UI"
 
-### 2. Buat Repository Baru di GitHub
-1. Buka [https://github.com/new](https://github.com/new).
-2. Beri nama repository, misalnya: `roboprompt-kka`.
-3. Pilih visibilitas **Public** atau **Private**.
-4. Biarkan opsi "Initialize with README", ".gitignore", atau "license" **kosong (unchecked)** karena kita sudah membuatnya secara lokal.
-5. Klik **Create repository**.
-
-### 3. Hubungkan dan Push ke GitHub
-Salin URL repository dari GitHub Anda, lalu jalankan di terminal:
-
-```bash
-# Ubah branch utama menjadi main
-git branch -M main
-
-# Hubungkan remote origin ke GitHub (ganti USERNAME dan REPO sesuai akun Anda)
-git remote add origin https://github.com/USERNAME/roboprompt-kka.git
-
-# Push kode ke GitHub
+# Push kode ke GitHub branch main
 git push -u origin main
 ```
 
 ---
 
-## 🚀 Langkah 3A: Deploy ke Vercel (https://vercel.com/) [Disarankan]
+## 🚀 Langkah 3: Deploy ke Vercel (https://vercel.com/) [Disarankan]
 
-Aplikasi ini sudah dilengkapi **Vercel Serverless Function** (`api/gemini.js` dan `vercel.json`), sehingga siap di-deploy langsung dari GitHub ke Vercel dalam 1 klik tanpa konfigurasi rumit.
+Aplikasi ini sudah dilengkapi **Vercel Serverless Function** (`api/gemini.js`, `api/ai.js`, dan `vercel.json`), sehingga siap di-deploy langsung dari GitHub ke Vercel dalam 1 klik tanpa konfigurasi rumit.
 
 ### 1. Masuk & Hubungkan Repository ke Vercel
 1. Buka dan login ke [https://vercel.com/](https://vercel.com/) menggunakan akun GitHub Anda.
@@ -99,67 +70,28 @@ Aplikasi ini sudah dilengkapi **Vercel Serverless Function** (`api/gemini.js` da
 ### 2. Konfigurasi Pengaturan Project
 1. **Framework Preset**: Biarkan **"Other"** (default).
 2. **Root Directory**: `./` (default).
-3. **Build & Output Settings**: Biarkan default (tidak perlu build command).
+3. **Build & Output Settings**: Biarkan default (file `vercel.json` sudah mengatur output ke root).
 
-### 3. Tambahkan Environment Variable Kunci AI (Paling Penting!)
+### 3. Tambahkan Environment Variable `GROQ_API_KEY` (Paling Penting!)
 1. Buka bagian **"Environment Variables"**.
-2. Masukkan salah satu kunci AI gratis berikut:
-   - **Pilihan Utama (Direkomendasikan - 100% Gratis & Sangat Cepat):**
-     - **Key:** `GROQ_API_KEY`
-     - **Value:** `<Dapatkan gratis di https://console.groq.com/keys (berawalan gsk_...)>`
-   - **Pilihan Alternatif (Google Gemini):**
-     - **Key:** `GEMINI_API_KEY`
-     - **Value:** `<Tempel API Key Gemini dari Google AI Studio (berawalan AIza...)>`
+2. Masukkan:
+   - **Key:** `GROQ_API_KEY`
+   - **Value:** `<Tempel API Key Groq Anda yang berawalan gsk_...>`
 3. Klik tombol **"Add"**.
 
 ### 4. Klik "Deploy"
 1. Klik tombol biru **"Deploy"**.
 2. Tunggu proses deploy sekitar 15–30 detik.
 3. Vercel akan menerbitkan URL domain resmi Anda, misalnya: `https://roboprompt.vercel.app`.
-4. Setiap kali Anda melakukan `git push` ke branch `main`, Vercel akan otomatis meng-update aplikasi Anda!
+4. Siswa dapat langsung menggunakan aplikasi dan tombol **"⚡ Optimalkan dengan AI"** tanpa perlu menyetel API Key di browser!
+5. Setiap kali Anda melakukan `git push` ke branch `main`, Vercel akan otomatis meng-update aplikasi Anda!
 
 ---
 
-## 🚀 Langkah 3B: Deploy ke Netlify (https://app.netlify.com/)
+## 💡 Mode Offline & Simulasi Cerdas
 
-Aplikasi ini sudah dilengkapi arsitektur **Netlify Serverless Function** (`netlify/functions/gemini.js` dan `netlify.toml`), sehingga API Key Anda **100% aman dan tidak akan pernah bocor ke publik atau browser pengguna**.
-
-### 1. Masuk & Hubungkan Repository ke Netlify
-1. Buka dan login ke [https://app.netlify.com/](https://app.netlify.com/).
-2. Pada dashboard Netlify, klik tombol **"Add new site"** $\rightarrow$ pilih **"Import an existing project"**.
-3. Pilih penyedia Git: **GitHub**.
-4. Berikan izin akses Netlify ke akun GitHub Anda, lalu pilih repository `roboprompt-kka`.
-
-### 2. Konfigurasi Pengaturan Build
-Netlify akan secara otomatis membaca file `netlify.toml` yang sudah disediakan:
-- **Base directory:** Biarkan kosong (`/`)
-- **Build command:** `echo 'Build OK'` (atau biarkan kosong)
-- **Publish directory:** `.` (root directory)
-- **Functions directory:** `netlify/functions`
-
-### 3. Pasang Environment Variable `GEMINI_API_KEY` (Paling Penting!)
-Sebelum mengklik deploy, masukkan API Key agar fungsi serverless dapat berjalan:
-1. Klik menu dropdown **"Environment variables"** di halaman konfigurasi deploy (atau buka *Site configuration* $\rightarrow$ *Environment variables*).
-2. Klik **"Add a variable"**.
-3. Masukkan:
-   - **Key:** `GEMINI_API_KEY`
-   - **Value:** `<Tempel API Key Gemini Anda yang berawalan AIzaSy...>`
-4. Klik **"Deploy roboprompt-kka"**.
-
-### 4. Selesai & Uji Coba Situs!
-1. Tunggu proses deploy sekitar 15–30 detik hingga statusnya menjadi **Published**.
-2. Netlify akan memberikan URL live resmi, misalnya: `https://roboprompt-smk.netlify.app`.
-3. Buka URL tersebut di browser.
-4. Masuk ke **Sub-3 (RoboPrompt Studio)**, masukkan formula R-T-C-F buatan Anda sendiri, dan klik **"⚡ Optimalkan dengan Gemini AI"**. Gemini AI akan langsung merespons secara otomatis tanpa siswa perlu memasukkan API key lagi!
-
----
-
-## 💡 Menjalankan Secara Offline / Lokal
-
-Jika dijalankan secara lokal tanpa server Netlify (membuka file `index.html` langsung):
-1. Anda dapat mengklik tombol **"🔑 Setel Gemini API"** di bagian atas Sub-3.
-2. Tempelkan Google Gemini API Key Anda. Key tersebut akan tersimpan aman di `localStorage` peramban Anda.
-3. Aplikasi juga memiliki *simulator fallback edukatif* sehingga tetap dapat digunakan jika tidak terdapat koneksi internet.
+Jika dijalankan secara lokal tanpa koneksi internet atau tanpa server Vercel:
+- RoboPrompt memiliki **Simulator Edukatif R-T-C-F cerdas bawaan** yang akan merangkai prompt siswa secara otomatis tanpa error, sehingga proses belajar mengajar tetap berlangsung lancar.
 
 ---
 

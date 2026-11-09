@@ -90,15 +90,15 @@ if %errorlevel% equ 0 (
     echo 2. Login dengan akun GitHub Anda.
     echo 3. Temukan repository "roboprompt" dan klik "Import".
     echo 4. Pada "Environment Variables", tambahkan:
-    echo      Key   : GEMINI_API_KEY
-    echo      Value : (Masukkan Google Gemini API Key Anda dari Google AI Studio)
+    echo      Key   : GROQ_API_KEY
+    echo      Value : (Dapatkan gratis di https://console.groq.com/keys)
     echo 5. Klik "Deploy". Selesai! Web Anda langsung online di *.vercel.app!
     echo.
     echo ATAU DEPLOY KE NETLIFY:
     echo 1. Buka: https://app.netlify.com/
     echo 2. Klik "Add new site" -> "Import an existing project" -> pilih "GitHub".
     echo 3. Pilih repository Anda yang baru saja diunggah.
-    echo 4. Pada "Environment variables", tambahkan GEMINI_API_KEY.
+    echo 4. Pada "Environment variables", tambahkan GROQ_API_KEY.
     echo 5. Klik "Deploy roboprompt".
     echo.
 ) else (
