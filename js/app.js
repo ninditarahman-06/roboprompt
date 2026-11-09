@@ -2141,9 +2141,9 @@ SLIDE 5: KESIMPULAN & PENUTUP
     let cloudErrorMsg = '';
 
     try {
-      // 1. Serverless endpoint call (/api/gemini or /.netlify/functions/gemini)
+      // 1. Serverless endpoint call (/api/ai or /api/gemini)
       let res = null;
-      const endpoint = this.serverlessEndpoint || '/api/gemini';
+      const endpoint = this.serverlessEndpoint || '/api/ai';
       try {
         res = await fetch(endpoint, {
           method: 'POST',
@@ -2166,7 +2166,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
           const json = await res.json().catch(() => ({}));
           if (res.ok && json.success && json.text) {
             resultText = json.text;
-            usedSource = `${json.provider || 'Groq AI'} (${json.model || 'Llama 3.3 70B'})`;
+            usedSource = `${json.provider || 'Groq AI'} (${json.model || 'gpt-oss-120b'})`;
           } else {
             cloudErrorMsg = json.message || `Status ${res.status}`;
           }
@@ -2176,7 +2176,20 @@ SLIDE 5: KESIMPULAN & PENUTUP
         res = null;
       }
 
-      // 2. Fallback: Intelligent educational simulation if offline
+      // 2. Direct browser call to Groq API (bypasses serverless if local file:/// or serverless error)
+      if (!resultText) {
+        try {
+          const directText = await this.callGroqDirect(role, task, context, format);
+          if (directText) {
+            resultText = directText;
+            usedSource = 'Groq AI';
+          }
+        } catch (e) {
+          console.warn('Direct Groq call failed:', e);
+        }
+      }
+
+      // 3. Fallback: Intelligent educational simulation if completely offline
       let isFallback = false;
       if (!resultText) {
         resultText = this.getOfflineSmartSimulation(role, task, context, format);
@@ -2197,8 +2210,13 @@ SLIDE 5: KESIMPULAN & PENUTUP
       if (isFallback) {
         if (window.audioMgr) window.audioMgr.click();
         if (window.robot) window.robot.setState('EXPLAIN', 3500);
-        this.showToast('Prompt berhasil disusun dengan simulasi cerdas!', '⚡');
-        this.showRobotDialogue("Luar biasa! Formula R-T-C-F berhasil dirangkai menjadi teks master prompt siap pakai!");
+        if (cloudErrorMsg) {
+          this.showToast('Simulasi Cerdas (' + cloudErrorMsg + ')', 'ℹ️');
+          this.showRobotDialogue("Mode Simulasi: " + cloudErrorMsg);
+        } else {
+          this.showToast('Prompt berhasil dirangkai dengan simulasi cerdas!', 'ℹ️');
+          this.showRobotDialogue("Formula R-T-C-F berhasil dirangkai menjadi teks master prompt siap pakai!");
+        }
       } else {
         if (window.audioMgr) window.audioMgr.successChime();
         if (window.robot) window.robot.setState('CHEER', 3500);
@@ -2213,18 +2231,83 @@ SLIDE 5: KESIMPULAN & PENUTUP
 
     } catch (err) {
       console.error('AI call error:', err);
-      const fallbackPrompt = this.getOfflineSmartSimulation(role, task, context, format);
+      // Try direct Groq in catch as well before offline simulation
+      let directText = null;
+      try {
+        directText = await this.callGroqDirect(role, task, context, format);
+      } catch (e) {}
+
+      const promptText = directText || this.getOfflineSmartSimulation(role, task, context, format);
       consoleText.innerHTML = `
-        <div id="finalPromptText" style="color:#F8FAFC; line-height:1.75; font-size:13.5px; white-space:pre-wrap; font-family:'Fira Code', 'Segoe UI', monospace, sans-serif;">${this.escapeHtml(fallbackPrompt)}</div>
+        <div id="finalPromptText" style="color:#F8FAFC; line-height:1.75; font-size:13.5px; white-space:pre-wrap; font-family:'Fira Code', 'Segoe UI', monospace, sans-serif;">${this.escapeHtml(promptText)}</div>
       `;
-      if (window.audioMgr) window.audioMgr.click();
-      if (window.robot) window.robot.setState('EXPLAIN', 3500);
-      this.showToast('Prompt berhasil disusun dengan formula R-T-C-F!', '⚡');
-      this.showRobotDialogue("Formula R-T-C-F berhasil dirangkai menjadi master prompt siap pakai!");
+      if (directText) {
+        if (window.audioMgr) window.audioMgr.successChime();
+        if (window.robot) window.robot.setState('CHEER', 3500);
+        this.showToast('Prompt berhasil dioptimalkan oleh AI!', '⚡');
+        this.showRobotDialogue("Luar biasa! Prompt R-T-C-F berhasil disempurnakan oleh AI dan siap digunakan!");
+      } else {
+        if (window.audioMgr) window.audioMgr.click();
+        if (window.robot) window.robot.setState('EXPLAIN', 3500);
+        this.showToast('Mode Simulasi Aktif (Gagal terhubung ke AI)', 'ℹ️');
+        this.showRobotDialogue("Formula R-T-C-F berhasil dirangkai menggunakan simulator cerdas!");
+      }
       this.state.progress.sub3 = true;
       this.saveSession();
       this.renderSidebar();
     }
+  }
+
+  async callGroqDirect(role, task, promptContext, format) {
+    const key = (typeof localStorage !== 'undefined' && (localStorage.getItem('roboprompt_groq_key') || localStorage.getItem('groq_api_key'))) || '';
+    if (!key || key.length < 10) return null;
+    const systemInstruction = `Kamu adalah AI Master Prompt Engineer profesional di Kurikulum Vokasi SMK Koding & Kecerdasan Artifisial (PPLG SMKN 1 Bawang).
+Tugas utamamu adalah: MENYEMPURNAKAN DAN MERANGKAI 4 pilar input siswa (Role, Task, Context, Format) menjadi SATU MASTER PROMPT R-T-C-F tingkat industri siap pakai.
+PERINGATAN: JANGAN PERNAH MENJAWAB ATAU MEMBUATKAN TUGAS DARI SISWA! Tuliskan teks prompt-nya saja.`;
+
+    const userPrompt = `Input pilar formula R-T-C-F siswa:
+- Role (Peran): ${role || 'Spesialis Rekayasa Perangkat Lunak & AI'}
+- Task (Tugas): ${task || 'Selesaikan implementasi solusi secara komprehensif'}
+- Context & Constraints (Konteks & Batasan): ${promptContext || 'Terapkan standar industri terbaik, clean code, dan mitigasi error'}
+- Format (Format Luaran): ${format || 'Sajikan terstruktur, sistematis, dan terperinci'}
+
+Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai:`;
+
+    const models = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b'];
+
+    for (const model of models) {
+      try {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 9000);
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${key}`
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: [
+              { role: 'system', content: systemInstruction },
+              { role: 'user', content: userPrompt }
+            ],
+            temperature: 0.6,
+            max_tokens: 2048
+          }),
+          signal: ctrl.signal
+        });
+        clearTimeout(tid);
+
+        if (res.ok) {
+          const json = await res.json().catch(() => ({}));
+          const text = json.choices?.[0]?.message?.content;
+          if (text) return text;
+        }
+      } catch (e) {
+        // Continue to next model
+      }
+    }
+    return null;
   }
 
   getOfflineSmartSimulation(role, task, context, format) {

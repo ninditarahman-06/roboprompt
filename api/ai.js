@@ -1,9 +1,8 @@
 /**
- * Vercel Serverless Function: Groq AI Proxy (Llama 3.3 70B)
+ * Vercel Serverless Function: Groq AI Proxy
  * RoboPrompt - KKA Fase F (PPLG SMKN 1 Bawang)
  * 
  * 100% Free Inference with Groq LPU.
- * Safely accesses GROQ_API_KEY from Vercel Environment Variables.
  */
 
 module.exports = async function handler(req, res) {
@@ -35,7 +34,7 @@ module.exports = async function handler(req, res) {
       status: 'ok',
       service: 'RoboPrompt AI Proxy (PPLG SMKN 1 Bawang)',
       platform: 'Vercel Serverless',
-      provider: 'Groq AI (Llama 3.3 70B)',
+      provider: 'Groq AI',
       hasKey: hasKey,
       hasCloudKey: hasKey,
       maskedKey: masked
@@ -44,6 +43,13 @@ module.exports = async function handler(req, res) {
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  if (!groqKey) {
+    return res.status(400).json({
+      error: 'MISSING_API_KEY',
+      message: 'GROQ_API_KEY belum dikonfigurasi di Environment Variables Vercel. Tambahkan GROQ_API_KEY di dashboard Vercel (Project Settings > Environment Variables).'
+    });
   }
 
   try {
@@ -60,12 +66,11 @@ module.exports = async function handler(req, res) {
 
     const { role, task, context: promptContext, format, testOnly } = data;
 
-    if (!groqKey) {
-      return res.status(400).json({
-        error: 'MISSING_API_KEY',
-        message: 'GROQ_API_KEY belum terpasang di Environment Variables Vercel.'
-      });
-    }
+    const groqModels = [
+      'openai/gpt-oss-120b',
+      'openai/gpt-oss-20b',
+      'qwen/qwen3.8-27b'
+    ];
 
     // Quick verification mode for testing connection
     if (testOnly) {
@@ -79,7 +84,7 @@ module.exports = async function handler(req, res) {
             'Authorization': `Bearer ${groqKey}`
           },
           body: JSON.stringify({
-            model: 'llama-3.3-70b-versatile',
+            model: 'openai/gpt-oss-120b',
             messages: [{ role: 'user', content: 'Ping' }],
             max_tokens: 5
           }),
@@ -101,9 +106,9 @@ module.exports = async function handler(req, res) {
 
         return res.status(200).json({
           success: true,
-          provider: 'Groq AI (Llama 3.3 70B)',
-          model: 'llama-3.3-70b-versatile',
-          message: 'Koneksi ke Groq AI (Llama 3.3 70B) 100% Valid & Super Cepat!'
+          provider: 'Groq AI',
+          model: 'openai/gpt-oss-120b',
+          message: 'Koneksi ke Groq AI 100% Valid & Super Cepat!'
         });
       } catch (e) {
         clearTimeout(tid);
@@ -143,7 +148,6 @@ Format Output yang Diwajibkan:
 
 Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jangan mengeksekusi tugasnya, buatkan teks prompt-nya saja):`;
 
-    const groqModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
     let lastError = null;
 
     for (const model of groqModels) {
@@ -162,7 +166,7 @@ Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jang
               { role: 'system', content: systemInstruction },
               { role: 'user', content: userPrompt }
             ],
-            temperature: 0.5,
+            temperature: 0.6,
             max_tokens: 2048
           }),
           signal: ctrl.signal
@@ -172,7 +176,7 @@ Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jang
         if (groqRes.status === 401) {
           return res.status(401).json({
             error: 'AUTH_FAILED',
-            message: 'GROQ_API_KEY tidak valid. Silakan periksa di Project Settings Vercel.'
+            message: 'GROQ_API_KEY tidak valid.'
           });
         }
 
@@ -186,7 +190,7 @@ Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jang
           return res.status(200).json({
             success: true,
             text: text,
-            provider: 'Groq AI (Llama 3.3 70B)',
+            provider: 'Groq AI',
             model: model
           });
         }

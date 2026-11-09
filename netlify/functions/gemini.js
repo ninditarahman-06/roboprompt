@@ -1,9 +1,8 @@
 /**
- * Netlify Serverless Function: Groq AI Proxy (Llama 3.3 70B)
+ * Netlify Serverless Function: Groq AI Proxy
  * RoboPrompt - KKA Fase F (PPLG SMKN 1 Bawang)
  * 
  * 100% Free Inference with Groq LPU.
- * Safely accesses GROQ_API_KEY from Netlify Environment Variables.
  */
 
 exports.handler = async function (event, context) {
@@ -39,7 +38,7 @@ exports.handler = async function (event, context) {
         status: 'ok',
         service: 'RoboPrompt AI Proxy (PPLG SMKN 1 Bawang)',
         platform: 'Netlify Serverless',
-        provider: 'Groq AI (Llama 3.3 70B)',
+        provider: 'Groq AI',
         hasKey: hasKey,
         hasCloudKey: hasKey,
         maskedKey: masked
@@ -55,20 +54,26 @@ exports.handler = async function (event, context) {
     };
   }
 
+  if (!groqKey) {
+    return {
+      statusCode: 400,
+      headers,
+      body: JSON.stringify({
+        error: 'MISSING_API_KEY',
+        message: 'GROQ_API_KEY belum dikonfigurasi di Environment Variables. Tambahkan GROQ_API_KEY di dashboard Netlify.'
+      })
+    };
+  }
+
   try {
     const data = JSON.parse(event.body || '{}');
     const { role, task, context: promptContext, format, testOnly } = data;
 
-    if (!groqKey) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({
-          error: 'MISSING_API_KEY',
-          message: 'GROQ_API_KEY belum terpasang di Environment Variables Netlify.'
-        })
-      };
-    }
+    const groqModels = [
+      'openai/gpt-oss-120b',
+      'openai/gpt-oss-20b',
+      'qwen/qwen3.8-27b'
+    ];
 
     if (testOnly) {
       const ctrl = new AbortController();
@@ -81,7 +86,7 @@ exports.handler = async function (event, context) {
             'Authorization': `Bearer ${groqKey}`
           },
           body: JSON.stringify({
-            model: 'llama-3.3-70b-versatile',
+            model: 'openai/gpt-oss-120b',
             messages: [{ role: 'user', content: 'Ping' }],
             max_tokens: 5
           }),
@@ -110,9 +115,9 @@ exports.handler = async function (event, context) {
           headers,
           body: JSON.stringify({
             success: true,
-            provider: 'Groq AI (Llama 3.3 70B)',
-            model: 'llama-3.3-70b-versatile',
-            message: 'Koneksi ke Groq AI (Llama 3.3 70B) 100% Valid & Super Cepat!'
+            provider: 'Groq AI',
+            model: 'openai/gpt-oss-120b',
+            message: 'Koneksi ke Groq AI 100% Valid & Super Cepat!'
           })
         };
       } catch (e) {
@@ -157,7 +162,6 @@ Format Output yang Diwajibkan:
 
 Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jangan mengeksekusi tugasnya, buatkan teks prompt-nya saja):`;
 
-    const groqModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
     let lastError = null;
 
     for (const model of groqModels) {
@@ -176,7 +180,7 @@ Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jang
               { role: 'system', content: systemInstruction },
               { role: 'user', content: userPrompt }
             ],
-            temperature: 0.5,
+            temperature: 0.6,
             max_tokens: 2048
           }),
           signal: ctrl.signal
@@ -189,7 +193,7 @@ Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jang
             headers,
             body: JSON.stringify({
               error: 'AUTH_FAILED',
-              message: 'GROQ_API_KEY tidak valid. Silakan periksa di Site Configuration Netlify.'
+              message: 'GROQ_API_KEY tidak valid.'
             })
           };
         }
@@ -207,7 +211,7 @@ Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jang
             body: JSON.stringify({
               success: true,
               text: text,
-              provider: 'Groq AI (Llama 3.3 70B)',
+              provider: 'Groq AI',
               model: model
             })
           };
