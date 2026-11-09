@@ -39,8 +39,11 @@ class RoboPromptApp {
     this.quizAnswers = [];
     this.quizCompleted = false;
 
-    // Google Gemini AI Key State (Local / Netlify)
+    // Google Gemini AI Key State (Local / Vercel / Netlify)
     this.geminiApiKey = '';
+    this.hasNetlifyKey = false;
+    this.cloudPlatform = 'Cloud Serverless';
+    this.serverlessEndpoint = '/api/gemini';
 
     // Robot Facts Interactive State
     this.robotFactIndex = 0;
@@ -2006,47 +2009,58 @@ SLIDE 5: KESIMPULAN & PENUTUP
     const tag = document.getElementById('netlifyStatusTag');
     const detail = document.getElementById('netlifyStatusDetail');
 
-    try {
-      const res = await fetch('/.netlify/functions/gemini', {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' }
-      });
+    const tryEndpoints = ['/api/gemini', '/.netlify/functions/gemini'];
+    let succeeded = false;
 
-      if (res.ok) {
-        const data = await res.json();
-        this.hasNetlifyKey = Boolean(data.hasNetlifyKey);
+    for (const endpoint of tryEndpoints) {
+      try {
+        const res = await fetch(endpoint, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
 
-        if (this.hasNetlifyKey) {
-          if (tag) {
-            tag.textContent = '🟢 Aktif (Serverless)';
-            tag.style.background = '#DCFCE7';
-            tag.style.color = '#15803D';
+        if (res.ok) {
+          const data = await res.json();
+          this.hasNetlifyKey = Boolean(data.hasNetlifyKey || data.hasCloudKey);
+          this.cloudPlatform = data.platform || (endpoint.startsWith('/api') ? 'Vercel Serverless' : 'Netlify Serverless');
+          this.serverlessEndpoint = endpoint;
+
+          if (this.hasNetlifyKey) {
+            if (tag) {
+              tag.textContent = `🟢 Aktif (${this.cloudPlatform})`;
+              tag.style.background = '#DCFCE7';
+              tag.style.color = '#15803D';
+            }
+            if (detail) {
+              detail.innerHTML = `Variabel <code>GEMINI_API_KEY</code> terdeteksi di serverless ${this.cloudPlatform} (<code>${data.maskedKey || '***'}</code>). Siswa dapat langsung mengoptimalkan prompt tanpa input manual!`;
+            }
+            if (statusBox) {
+              statusBox.style.background = '#F0FDF4';
+              statusBox.style.borderColor = '#BBF7D0';
+            }
+          } else {
+            if (tag) {
+              tag.textContent = '🟡 Belum Disetel';
+              tag.style.background = '#FEF3C7';
+              tag.style.color = '#B45309';
+            }
+            if (detail) {
+              detail.innerHTML = `${this.cloudPlatform} aktif, tetapi variabel <code>GEMINI_API_KEY</code> belum ditambahkan di Environment Variables. Siswa dapat memasukkan API Key di bawah (tersimpan di browser), atau admin dapat mengaturnya di Vercel / Netlify.`;
+            }
+            if (statusBox) {
+              statusBox.style.background = '#FFFBEB';
+              statusBox.style.borderColor = '#FDE68A';
+            }
           }
-          if (detail) {
-            detail.innerHTML = `Variabel <code>GEMINI_API_KEY</code> terdeteksi di serverless Netlify (<code>${data.maskedKey || '***'}</code>). Siswa dapat langsung mengoptimalkan prompt tanpa input manual!`;
-          }
-          if (statusBox) {
-            statusBox.style.background = '#F0FDF4';
-            statusBox.style.borderColor = '#BBF7D0';
-          }
-        } else {
-          if (tag) {
-            tag.textContent = '🟡 Belum Disetel';
-            tag.style.background = '#FEF3C7';
-            tag.style.color = '#B45309';
-          }
-          if (detail) {
-            detail.innerHTML = `Netlify Functions aktif, tetapi variabel <code>GEMINI_API_KEY</code> belum ditambahkan di dashboard Netlify. Siswa dapat memasukkan API Key di bawah (tersimpan di browser), atau admin dapat mengaturnya di Netlify.`;
-          }
-          if (statusBox) {
-            statusBox.style.background = '#FFFBEB';
-            statusBox.style.borderColor = '#FDE68A';
-          }
+          succeeded = true;
+          break;
         }
-      } else {
-        throw new Error(`Status ${res.status}`);
+      } catch (e) {
+        // Continue to check next candidate endpoint
       }
-    } catch (e) {
+    }
+
+    if (!succeeded) {
       this.hasNetlifyKey = false;
       if (tag) {
         tag.textContent = '⚪ Mode Standalone';
@@ -2116,17 +2130,29 @@ SLIDE 5: KESIMPULAN & PENUTUP
           errorMsg = json.error?.message || `HTTP ${res.status}`;
         }
       } else {
-        // Test Netlify cloud backend
-        const res = await fetch('/.netlify/functions/gemini', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ testOnly: true })
-        });
-        const json = await res.json().catch(() => ({}));
-        if (res.ok && json.success) {
+        // Test Cloud Serverless backend (Vercel or Netlify)
+        const endpoint = this.serverlessEndpoint || '/api/gemini';
+        let res = null;
+        try {
+          res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ testOnly: true })
+          });
+        } catch (e) {
+          if (endpoint !== '/.netlify/functions/gemini') {
+            res = await fetch('/.netlify/functions/gemini', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ testOnly: true })
+            }).catch(() => null);
+          }
+        }
+        const json = res ? await res.json().catch(() => ({})) : {};
+        if (res && res.ok && json.success) {
           isSuccess = true;
         } else {
-          errorMsg = json.message || 'Variabel GEMINI_API_KEY di Netlify belum disetel atau tidak valid';
+          errorMsg = (json && json.message) || 'Variabel GEMINI_API_KEY di Vercel/Netlify belum disetel atau tidak valid';
         }
       }
 
@@ -2394,18 +2420,30 @@ SLIDE 5: KESIMPULAN & PENUTUP
     };
 
     let resultText = '';
-    let usedSource = 'Netlify Serverless';
-    let netlifyErrorMsg = '';
+    let usedSource = this.cloudPlatform || 'Cloud Serverless';
+    let cloudErrorMsg = '';
 
     try {
-      // 1. Try Netlify Functions endpoint first
+      // 1. Try Serverless endpoint first (/api/gemini or /.netlify/functions/gemini)
       let res = null;
+      const endpoint = this.serverlessEndpoint || '/api/gemini';
       try {
-        res = await fetch('/.netlify/functions/gemini', {
+        res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
+
+        if (res && (res.status === 404 || !res.ok) && endpoint !== '/.netlify/functions/gemini') {
+          const fallbackRes = await fetch('/.netlify/functions/gemini', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          }).catch(() => null);
+          if (fallbackRes && fallbackRes.ok) {
+            res = fallbackRes;
+          }
+        }
 
         if (res) {
           const json = await res.json().catch(() => ({}));
@@ -2413,20 +2451,20 @@ SLIDE 5: KESIMPULAN & PENUTUP
             resultText = json.text;
             usedSource = `Google Gemini AI (${json.model || 'cloud'})`;
           } else {
-            netlifyErrorMsg = json.message || `Status ${res.status}`;
+            cloudErrorMsg = json.message || `Status ${res.status}`;
           }
         }
       } catch (err) {
-        netlifyErrorMsg = err.message || 'Koneksi Netlify Functions gagal';
+        cloudErrorMsg = err.message || 'Koneksi Cloud Serverless gagal';
         res = null;
       }
 
-      // 2. Direct client-side call if local API key is present & Netlify function unreachable
+      // 2. Direct client-side call if local API key is present & serverless function unreachable
       if (!resultText && this.geminiApiKey) {
         try {
           resultText = await this.callGeminiDirect(payload);
           usedSource = 'Google Gemini AI (Direct API)';
-          netlifyErrorMsg = '';
+          cloudErrorMsg = '';
         } catch (err) {
           console.warn('Direct Gemini call failed:', err);
         }
@@ -2454,10 +2492,10 @@ SLIDE 5: KESIMPULAN & PENUTUP
         if (window.audioMgr) window.audioMgr.click();
         if (window.robot) window.robot.setState('EXPLAIN', 4000);
         
-        let errorDetail = netlifyErrorMsg || 'Koneksi API tidak tersedia';
+        let errorDetail = cloudErrorMsg || 'Koneksi API tidak tersedia';
         if (errorDetail.includes('MISSING_API_KEY')) {
-          this.showToast('⚠️ GEMINI_API_KEY belum terpasang di Netlify Environment Variables.', '⚠️');
-          this.showRobotDialogue("Variabel GEMINI_API_KEY belum disetel di Netlify. Masukkan API Key di Site configuration > Environment variables Netlify, atau klik 'Setel Gemini API' di atas!");
+          this.showToast('⚠️ GEMINI_API_KEY belum terpasang di Vercel / Netlify Environment Variables.', '⚠️');
+          this.showRobotDialogue("Variabel GEMINI_API_KEY belum disetel di Vercel / Netlify. Masukkan API Key di Environment Variables dashboard hosting Anda, atau klik 'Setel Gemini API' di atas!");
         } else {
           this.showToast('⚠️ Kendala AI: ' + errorDetail.substring(0, 45), '⚠️');
           this.showRobotDialogue("Pemberitahuan dari Google AI: " + errorDetail + ". Menampilkan formula simulasi edukatif offline.");

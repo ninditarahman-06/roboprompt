@@ -87,7 +87,36 @@ git push -u origin main
 
 ---
 
-## 🚀 Langkah 3: Deploy ke Netlify (https://app.netlify.com/)
+## 🚀 Langkah 3A: Deploy ke Vercel (https://vercel.com/) [Disarankan]
+
+Aplikasi ini sudah dilengkapi **Vercel Serverless Function** (`api/gemini.js` dan `vercel.json`), sehingga siap di-deploy langsung dari GitHub ke Vercel dalam 1 klik tanpa konfigurasi rumit.
+
+### 1. Masuk & Hubungkan Repository ke Vercel
+1. Buka dan login ke [https://vercel.com/](https://vercel.com/) menggunakan akun GitHub Anda.
+2. Pada Dashboard Vercel, klik tombol **"Add New..."** $\rightarrow$ pilih **"Project"** (atau buka [https://vercel.com/new](https://vercel.com/new)).
+3. Pada daftar repository GitHub, cari **`roboprompt`**, lalu klik tombol **"Import"**.
+
+### 2. Konfigurasi Pengaturan Project
+1. **Framework Preset**: Biarkan **"Other"** (default).
+2. **Root Directory**: `./` (default).
+3. **Build & Output Settings**: Biarkan default (tidak perlu build command).
+
+### 3. Tambahkan Environment Variable `GEMINI_API_KEY` (Paling Penting!)
+1. Buka bagian **"Environment Variables"**.
+2. Masukkan:
+   - **Key:** `GEMINI_API_KEY`
+   - **Value:** `<Tempel API Key Gemini Anda yang berawalan AIzaSy...>`
+3. Klik tombol **"Add"**.
+
+### 4. Klik "Deploy"
+1. Klik tombol biru **"Deploy"**.
+2. Tunggu proses deploy sekitar 15–30 detik.
+3. Vercel akan menerbitkan URL domain resmi Anda, misalnya: `https://roboprompt.vercel.app`.
+4. Setiap kali Anda melakukan `git push` ke branch `main`, Vercel akan otomatis meng-update aplikasi Anda!
+
+---
+
+## 🚀 Langkah 3B: Deploy ke Netlify (https://app.netlify.com/)
 
 Aplikasi ini sudah dilengkapi arsitektur **Netlify Serverless Function** (`netlify/functions/gemini.js` dan `netlify.toml`), sehingga API Key Anda **100% aman dan tidak akan pernah bocor ke publik atau browser pengguna**.
 

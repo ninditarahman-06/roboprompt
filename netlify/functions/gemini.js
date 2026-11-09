@@ -39,7 +39,9 @@ exports.handler = async function (event, context) {
       body: JSON.stringify({
         status: 'ok',
         service: 'RoboPrompt Gemini AI Proxy (SMKN 1 Bawang)',
+        platform: 'Netlify Serverless',
         hasNetlifyKey: hasKey,
+        hasCloudKey: hasKey,
         maskedKey: masked
       })
     };
