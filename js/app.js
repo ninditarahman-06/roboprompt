@@ -351,13 +351,16 @@ SLIDE 5: KESIMPULAN & PENUTUP
     this.setupEventListeners();
     this.renderSidebar();
     this.setupRobot();
-    this.checkNetlifyHealth();
 
-    // Check if initial registration is needed
+    // Render Sub-Unit 1 di latar belakang
+    this.switchSubUnit(1);
+
+    // Cek apakah biodata peserta didik perlu diisi (akses pertama kali)
     if (!this.state.isRegistered || !this.state.studentName || !this.state.studentNis) {
-      this.openRegistrationModal(true);
+      setTimeout(() => {
+        this.openRegistrationModal(true);
+      }, 100);
     } else {
-      this.switchSubUnit(1);
       setTimeout(() => {
         this.showRobotDialogue(`Selamat datang kembali, ${this.state.studentName}! Mari kita lanjutkan belajar formula R-T-C-F!`);
       }, 800);
@@ -781,6 +784,11 @@ SLIDE 5: KESIMPULAN & PENUTUP
     const modal = document.getElementById('onboardingModal');
     if (!modal) return;
 
+    const closeBtn = document.getElementById('onboardingCloseBtn');
+    if (closeBtn) {
+      closeBtn.style.display = (this.state.isRegistered && !isInitial) ? 'flex' : 'none';
+    }
+
     const nameInp = document.getElementById('regName');
     const nisInp = document.getElementById('regNis');
     const classInp = document.getElementById('regClass');
@@ -790,6 +798,10 @@ SLIDE 5: KESIMPULAN & PENUTUP
     if (classInp) classInp.value = this.state.studentClass || '';
 
     modal.classList.add('open');
+
+    setTimeout(() => {
+      nameInp?.focus();
+    }, 150);
 
     if (window.robot) window.robot.setState('EXPLAIN', 2500);
     this.showRobotDialogue("Halo! Silakan masukkan Nama Lengkap, NIS, dan Kelasmu sebelum kita mulai belajar!");
