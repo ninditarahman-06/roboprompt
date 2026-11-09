@@ -789,8 +789,15 @@ SLIDE 5: KESIMPULAN & PENUTUP
         localStorage.setItem('roboprompt_gemini_key', val);
       } catch (e) {}
       geminiModal?.classList.remove('open');
-      this.showToast('Google Gemini API Key berhasil disimpan!', '⚡');
-      this.showRobotDialogue("Koneksi Google Gemini AI berhasil dihubungkan! Sekarang kamu bisa menguji formula prompt secara nyata!");
+
+      if (val.startsWith('gsk_')) {
+        this.showToast('Kunci Groq AI (Llama 3.3 70B) berhasil disimpan!', '⚡');
+        this.showRobotDialogue("Koneksi Groq AI (Llama 3.3 70B · 100% Gratis) berhasil dihubungkan! Kecepatan inferensi super instan siap digunakan!");
+      } else {
+        this.showToast('API Key berhasil disimpan!', '⚡');
+        this.showRobotDialogue("Koneksi AI berhasil dihubungkan! Sekarang kamu bisa menguji formula prompt secara nyata!");
+      }
+
       if (this.currentSubUnit === 3) {
         this.renderSubUnit3(document.getElementById('viewContainer'));
       }
@@ -2026,13 +2033,14 @@ SLIDE 5: KESIMPULAN & PENUTUP
           this.serverlessEndpoint = endpoint;
 
           if (this.hasNetlifyKey) {
+            const providerName = data.provider || 'AI Cloud Serverless';
             if (tag) {
               tag.textContent = `🟢 Aktif (${this.cloudPlatform})`;
               tag.style.background = '#DCFCE7';
               tag.style.color = '#15803D';
             }
             if (detail) {
-              detail.innerHTML = `Variabel <code>GEMINI_API_KEY</code> terdeteksi di serverless ${this.cloudPlatform} (<code>${data.maskedKey || '***'}</code>). Siswa dapat langsung mengoptimalkan prompt tanpa input manual!`;
+              detail.innerHTML = `Layanan <strong>${providerName}</strong> aktif di ${this.cloudPlatform} (<code>${data.maskedKey || '***'}</code>). Siswa dapat langsung mengoptimalkan prompt tanpa input manual!`;
             }
             if (statusBox) {
               statusBox.style.background = '#F0FDF4';
@@ -2045,7 +2053,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
               tag.style.color = '#B45309';
             }
             if (detail) {
-              detail.innerHTML = `${this.cloudPlatform} aktif, tetapi variabel <code>GEMINI_API_KEY</code> belum ditambahkan di Environment Variables. Siswa dapat memasukkan API Key di bawah (tersimpan di browser), atau admin dapat mengaturnya di Vercel / Netlify.`;
+              detail.innerHTML = `${this.cloudPlatform} aktif. Tambahkan <code>GROQ_API_KEY</code> (Rekomendasi Gratis) atau <code>GEMINI_API_KEY</code> di Environment Variables dashboard hosting Anda, atau masukkan API Key di bawah.`;
             }
             if (statusBox) {
               statusBox.style.background = '#FFFBEB';
@@ -2100,60 +2108,62 @@ SLIDE 5: KESIMPULAN & PENUTUP
     resultDiv.style.background = '#EFF6FF';
     resultDiv.style.border = '1px solid #BFDBFE';
     resultDiv.style.color = '#1E40AF';
-    resultDiv.innerHTML = '⏳ Menghubungi server Google Gemini AI...';
+    resultDiv.innerHTML = '⏳ Menghubungi server AI untuk verifikasi...';
 
     if (btnTest) btnTest.disabled = true;
 
     try {
       let isSuccess = false;
       let errorMsg = '';
+      let successProvider = 'AI Server';
+      let successModel = '';
 
-      if (cleanKey) {
-        // Direct probe to Google API
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cleanKey}`;
-        const res = await fetch(url, {
+      const endpoint = this.serverlessEndpoint || '/api/gemini';
+      let res = null;
+
+      try {
+        res = await fetch(endpoint, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': cleanKey
-          },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: 'Halo' }] }],
-            generationConfig: { maxOutputTokens: 5 }
-          })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ testOnly: true, customApiKey: cleanKey || '' })
         });
-
-        const json = await res.json().catch(() => ({}));
-        if (res.ok) {
-          isSuccess = true;
-        } else {
-          errorMsg = json.error?.message || `HTTP ${res.status}`;
-        }
-      } else {
-        // Test Cloud Serverless backend (Vercel or Netlify)
-        const endpoint = this.serverlessEndpoint || '/api/gemini';
-        let res = null;
-        try {
-          res = await fetch(endpoint, {
+      } catch (e) {
+        if (endpoint !== '/.netlify/functions/gemini') {
+          res = await fetch('/.netlify/functions/gemini', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ testOnly: true })
-          });
-        } catch (e) {
-          if (endpoint !== '/.netlify/functions/gemini') {
-            res = await fetch('/.netlify/functions/gemini', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ testOnly: true })
-            }).catch(() => null);
-          }
+            body: JSON.stringify({ testOnly: true, customApiKey: cleanKey || '' })
+          }).catch(() => null);
         }
-        const json = res ? await res.json().catch(() => ({})) : {};
-        if (res && res.ok && json.success) {
+      }
+
+      if (res) {
+        const json = await res.json().catch(() => ({}));
+        if (res.ok && json.success) {
           isSuccess = true;
+          successProvider = json.provider || (cleanKey.startsWith('gsk_') ? 'Groq AI' : 'AI Cloud');
+          successModel = json.model || 'Aktif';
         } else {
-          errorMsg = (json && json.message) || 'Variabel GEMINI_API_KEY di Vercel/Netlify belum disetel atau tidak valid';
+          errorMsg = json.message || `Status ${res.status}`;
         }
+      } else if (cleanKey && cleanKey.startsWith('AIza')) {
+        // Fallback direct probe if offline and key is Gemini
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cleanKey}`;
+        const directRes = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cleanKey },
+          body: JSON.stringify({ contents: [{ parts: [{ text: 'Halo' }] }], generationConfig: { maxOutputTokens: 5 } })
+        }).catch(() => null);
+        const json = directRes ? await directRes.json().catch(() => ({})) : {};
+        if (directRes && directRes.ok) {
+          isSuccess = true;
+          successProvider = 'Google Gemini AI (Direct)';
+          successModel = 'gemini-2.0-flash';
+        } else {
+          errorMsg = (json && json.error?.message) || 'Koneksi ke Google gagal';
+        }
+      } else {
+        errorMsg = 'Tidak dapat terhubung ke serverless backend. Pastikan aplikasi telah ter-deploy ke Vercel/Netlify.';
       }
 
       if (isSuccess) {
@@ -2161,8 +2171,8 @@ SLIDE 5: KESIMPULAN & PENUTUP
         resultDiv.style.border = '1px solid #BBF7D0';
         resultDiv.style.color = '#15803D';
         resultDiv.innerHTML = `
-          <strong>✅ Kunci API Valid & Berhasil Terhubung!</strong><br>
-          Model <strong>gemini-2.0-flash</strong> merespons dengan normal. Klik <em>"💾 Simpan & Hubungkan"</em> di bawah untuk mengaktifkannya.
+          <strong>✅ Kunci AI Valid & Berhasil Terhubung!</strong><br>
+          Penyedia: <strong>${successProvider}</strong> (${successModel}). Klik <em>"💾 Simpan & Hubungkan"</em> di bawah untuk mengaktifkannya.
         `;
         if (window.audioMgr) window.audioMgr.successChime();
         if (window.robot) window.robot.setState('CHEER', 2500);
@@ -2173,12 +2183,11 @@ SLIDE 5: KESIMPULAN & PENUTUP
 
         let explanation = '';
         if (errorMsg.toLowerCase().includes('api key not valid') || errorMsg.toLowerCase().includes('unauthenticated')) {
-          explanation = `Google menolak API Key ini (<strong>API key not valid</strong>).<br>
-          <strong>Solusi Praktis:</strong>
+          explanation = `Kunci AI ditolak (<strong>Invalid API Key</strong>).<br>
+          <strong>Rekomendasi Terbaik (100% Gratis & Instan):</strong>
           <ul style="margin:6px 0 0 16px; padding:0;">
-            <li>Buka <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#DC2626; font-weight:700; text-decoration:underline;">Google AI Studio</a>.</li>
-            <li>Klik tombol biru <strong>Create API key</strong> &rarr; pilih <strong>"Create API key in new project"</strong>.</li>
-            <li>Salin key menggunakan ikon copy di samping key, lalu tempelkan ke sini dan klik Uji lagi.</li>
+            <li>Gunakan <strong>Groq AI</strong> &rarr; buka <a href="https://console.groq.com/keys" target="_blank" style="color:#059669; font-weight:800; text-decoration:underline;">console.groq.com/keys</a>.</li>
+            <li>Login dengan akun Google, klik <strong>Create API Key</strong>, lalu tempelkan key (berawalan <code>gsk_...</code>).</li>
           </ul>`;
         } else {
           explanation = `Pesan kendala: ${this.escapeHtml(errorMsg)}`;
@@ -2449,7 +2458,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
           const json = await res.json().catch(() => ({}));
           if (res.ok && json.success && json.text) {
             resultText = json.text;
-            usedSource = `Google Gemini AI (${json.model || 'cloud'})`;
+            usedSource = `${json.provider || 'AI Cerdas'} (${json.model || 'cloud'})`;
           } else {
             cloudErrorMsg = json.message || `Status ${res.status}`;
           }
@@ -2494,17 +2503,17 @@ SLIDE 5: KESIMPULAN & PENUTUP
         
         let errorDetail = cloudErrorMsg || 'Koneksi API tidak tersedia';
         if (errorDetail.includes('MISSING_API_KEY')) {
-          this.showToast('⚠️ GEMINI_API_KEY belum terpasang di Vercel / Netlify Environment Variables.', '⚠️');
-          this.showRobotDialogue("Variabel GEMINI_API_KEY belum disetel di Vercel / Netlify. Masukkan API Key di Environment Variables dashboard hosting Anda, atau klik 'Setel Gemini API' di atas!");
+          this.showToast('⚠️ Kunci AI belum terpasang di Vercel / Netlify Environment Variables.', '⚠️');
+          this.showRobotDialogue("Kunci AI belum disetel di Vercel/Netlify. Tambahkan GROQ_API_KEY (Gratis) atau GEMINI_API_KEY di dashboard hosting Anda, atau klik tombol 'Setel AI' di atas!");
         } else {
           this.showToast('⚠️ Kendala AI: ' + errorDetail.substring(0, 45), '⚠️');
-          this.showRobotDialogue("Pemberitahuan dari Google AI: " + errorDetail + ". Menampilkan formula simulasi edukatif offline.");
+          this.showRobotDialogue("Pemberitahuan dari AI Server: " + errorDetail + ". Menampilkan formula simulasi edukatif offline.");
         }
       } else {
         if (window.audioMgr) window.audioMgr.successChime();
         if (window.robot) window.robot.setState('CHEER', 3500);
-        this.showRobotDialogue("Luar biasa! Prompt R-T-C-F berhasil disempurnakan oleh Gemini AI (" + usedSource + ") dan siap digunakan. Klik tombol 'Salin Prompt' di bawah!");
-        this.showToast('Prompt berhasil dioptimalkan oleh Gemini AI!', '⚡');
+        this.showRobotDialogue("Luar biasa! Prompt R-T-C-F berhasil disempurnakan oleh " + usedSource + " dan siap digunakan. Klik tombol 'Salin Prompt' di bawah!");
+        this.showToast('Prompt berhasil dioptimalkan oleh AI!', '⚡');
       }
 
       // Update Sub-Unit 3 progress

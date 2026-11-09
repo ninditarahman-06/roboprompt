@@ -101,11 +101,15 @@ Aplikasi ini sudah dilengkapi **Vercel Serverless Function** (`api/gemini.js` da
 2. **Root Directory**: `./` (default).
 3. **Build & Output Settings**: Biarkan default (tidak perlu build command).
 
-### 3. Tambahkan Environment Variable `GEMINI_API_KEY` (Paling Penting!)
+### 3. Tambahkan Environment Variable Kunci AI (Paling Penting!)
 1. Buka bagian **"Environment Variables"**.
-2. Masukkan:
-   - **Key:** `GEMINI_API_KEY`
-   - **Value:** `<Tempel API Key Gemini Anda yang berawalan AIzaSy...>`
+2. Masukkan salah satu kunci AI gratis berikut:
+   - **Pilihan Utama (Direkomendasikan - 100% Gratis & Sangat Cepat):**
+     - **Key:** `GROQ_API_KEY`
+     - **Value:** `<Dapatkan gratis di https://console.groq.com/keys (berawalan gsk_...)>`
+   - **Pilihan Alternatif (Google Gemini):**
+     - **Key:** `GEMINI_API_KEY`
+     - **Value:** `<Tempel API Key Gemini dari Google AI Studio (berawalan AIza...)>`
 3. Klik tombol **"Add"**.
 
 ### 4. Klik "Deploy"
