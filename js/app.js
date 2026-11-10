@@ -20,10 +20,12 @@ class RoboPromptApp {
         sub1: false,
         sub2: false,
         sub3: false,
-        sub4: false
+        sub4: false,
+        sub5: false
       },
       minigameScore: 0,
       doctorSolvedCases: {},
+      checkerSolvedCases: {},
       quizScore: 0,
       savedPrompts: []
     };
@@ -33,6 +35,11 @@ class RoboPromptApp {
     this.doctorSlots = [null, null, null, null];
     this.doctorSlotStatus = ['neutral', 'neutral', 'neutral', 'neutral'];
     this.activeDoctorSlotIndex = 0;
+
+    // Sub-Unit 3 Prompt Checker State (PPLG Cases)
+    this.checkerCaseIndex = 0;
+    this.checkerHistory = {};
+    this.initCheckerCases();
 
     // Sub-Unit 4 Quiz State
     this.quizIndex = 0;
@@ -394,6 +401,10 @@ SLIDE 5: KESIMPULAN & PENUTUP
       console.warn('Session load error:', e);
     }
     this.state.doctorSolvedCases = this.state.doctorSolvedCases || {};
+    this.state.checkerSolvedCases = this.state.checkerSolvedCases || {};
+    if (this.state.progress && this.state.progress.sub5 === undefined) {
+      this.state.progress.sub5 = false;
+    }
     this.updateStudentBadge();
   }
 
@@ -418,17 +429,18 @@ SLIDE 5: KESIMPULAN & PENUTUP
   }
 
   updateGlobalProgress() {
-    const p = this.state.progress;
+    const p = this.state.progress || {};
     let completed = 0;
     if (p.sub1) completed++;
     if (p.sub2) completed++;
     if (p.sub3) completed++;
     if (p.sub4) completed++;
-    const pct = Math.round((completed / 4) * 100);
+    if (p.sub5) completed++;
+    const pct = Math.round((completed / 5) * 100);
 
     const fill = document.getElementById('globalProgressFill');
     const text = document.getElementById('globalProgressPct');
-    if (fill) fill.style.width = `${Math.max(15, pct)}%`;
+    if (fill) fill.style.width = `${Math.max(12, pct)}%`;
     if (text) text.textContent = `${pct}%`;
   }
 
@@ -752,13 +764,14 @@ SLIDE 5: KESIMPULAN & PENUTUP
 
     document.getElementById('navNextBtn')?.addEventListener('click', () => {
       this.stopExplanation();
-      if (this.currentSubUnit < 4) {
+      if (this.currentSubUnit < 5) {
         this.switchSubUnit(this.currentSubUnit + 1);
       } else {
         const is100Pct = this.state.progress.sub1 && 
                          this.state.progress.sub2 && 
                          this.state.progress.sub3 && 
-                         this.state.progress.sub4;
+                         this.state.progress.sub4 && 
+                         this.state.progress.sub5;
         if (is100Pct) {
           this.openCertificateModal();
         } else {
@@ -824,6 +837,8 @@ SLIDE 5: KESIMPULAN & PENUTUP
       this.explainSubUnit3();
     } else if (this.currentSubUnit === 4) {
       this.explainSubUnit4();
+    } else if (this.currentSubUnit === 5) {
+      this.explainSubUnit5();
     }
   }
 
@@ -936,14 +951,21 @@ SLIDE 5: KESIMPULAN & PENUTUP
   }
 
   explainSubUnit3() {
-    const text = "Di RoboPrompt Studio, kamu merancang prompt berkualitas tinggi menggunakan formula standar industri R-T-C-F (Role, Task, Context, dan Format). Masukkan kata-katamu pada setiap pilar, lalu klik '⚡ Optimalkan dengan AI' untuk mendapatkan prompt siap pakai yang profesional!";
+    const text = "Di Laboratorium Uji Mandiri Prompt ini, pilihlah salah satu studi kasus dasar pemrograman PPLG. Ketik rancangan prompt terbaikmu sesuai formula R-T-C-F, lalu klik 'Cek Kekuatan Prompt'. AI akan menganalisis apakah promptmu tergolong Kuat atau Lemah serta memberikan saran perbaikan mendalam!";
     this.showRobotDialogue(text, true, () => {
       this.stopExplanation();
     });
   }
 
   explainSubUnit4() {
-    const text = "Saatnya pembuktian kompetensi! Ada 5 soal studi kasus rekayasa prompt. Baca instruksi kasus dengan teliti, tentukan pilar mana yang ditanyakan, dan kumpulkan skor terbaikmu untuk meraih Sertifikat Digital resmi!";
+    const text = "Di RoboPrompt Studio, kamu merancang prompt berkualitas tinggi menggunakan formula standar industri R-T-C-F (Role, Task, Context, dan Format). Masukkan kata-katamu pada setiap pilar, lalu klik '⚡ Optimalkan dengan AI' untuk mendapatkan prompt siap pakai yang profesional!";
+    this.showRobotDialogue(text, true, () => {
+      this.stopExplanation();
+    });
+  }
+
+  explainSubUnit5() {
+    const text = "Saatnya pembuktian kompetensi akhir! Ada 25 butir soal evaluasi pemahaman formula R-T-C-F dan studi kasus AI. Jawab dengan teliti dan raih skor minimal 80 untuk menerbitkan Sertifikat Digital resmi!";
     this.showRobotDialogue(text, true, () => {
       this.stopExplanation();
     });
@@ -956,21 +978,23 @@ SLIDE 5: KESIMPULAN & PENUTUP
     const subUnits = [
       { id: 1, tag: 'Sub-1', title: 'Teori R-T-C-F', key: 'sub1' },
       { id: 2, tag: 'Sub-2', title: 'Prompt Doctor', key: 'sub2' },
-      { id: 3, tag: 'Sub-3', title: 'RoboPrompt Studio', key: 'sub3' },
-      { id: 4, tag: 'Sub-4', title: 'Evaluasi & Kuis', key: 'sub4' }
+      { id: 3, tag: 'Sub-3', title: 'Uji Cek Prompt', key: 'sub3' },
+      { id: 4, tag: 'Sub-4', title: 'RoboPrompt Studio', key: 'sub4' },
+      { id: 5, tag: 'Sub-5', title: 'Evaluasi & Kuis', key: 'sub5' }
     ];
 
     const is100Pct = this.state.progress.sub1 && 
                      this.state.progress.sub2 && 
                      this.state.progress.sub3 && 
-                     this.state.progress.sub4;
+                     this.state.progress.sub4 &&
+                     this.state.progress.sub5;
 
     let html = subUnits.map(item => {
       const isCompleted = this.state.progress[item.key];
       const isActive = this.currentSubUnit === item.id;
       // Sub-unit unlocked if previous completed or first.
-      // Sub-3 (RoboPrompt Studio) is NEVER locked even if overall progress is 0%.
-      const isLocked = (item.id === 3) 
+      // Sub-4 (RoboPrompt Studio) is also unlocked for exploration.
+      const isLocked = (item.id === 4) 
         ? false 
         : (item.id > 1 && !this.state.progress[`sub${item.id - 1}`] && !isActive);
 
@@ -990,7 +1014,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
       `;
     }).join('');
 
-    // If progress is 100%, automatically render the Certificate button right below Sub-4!
+    // If progress is 100%, automatically render the Certificate button right below Sub-5!
     if (is100Pct) {
       html += `
         <div class="sidebar-cert-btn-item" id="btnSidebarCertificate" title="Selamat! Progres sudah 100%! Klik untuk membuka & mengunduh Sertifikat Digital!">
@@ -1038,7 +1062,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
     const nextBtn = document.getElementById('navNextBtn');
     if (prevBtn) prevBtn.disabled = (id === 1);
     if (nextBtn) {
-      nextBtn.innerHTML = (id === 4) ? '🏆 Lihat Sertifikat' : 'Lanjut ➔';
+      nextBtn.innerHTML = (id === 5) ? '🏆 Lihat Sertifikat' : 'Lanjut ➔';
     }
 
     const container = document.getElementById('viewContainer');
@@ -1055,9 +1079,13 @@ SLIDE 5: KESIMPULAN & PENUTUP
     } else if (id === 3) {
       this.renderSubUnit3(container);
       if (window.robot) window.robot.setState('EXPLAIN', 3000);
-      this.showRobotDialogue("Selamat datang di RoboPrompt Studio! Masukkan formulamu pada pilar R-T-C-F, lalu klik '⚡ Optimalkan dengan AI'!");
+      this.showRobotDialogue("Selamat datang di Sub-Unit 3: Uji Mandiri Prompt! Pilih studi kasus dasar PPLG, ketik promptmu, lalu cek kekuatannya dengan AI!");
     } else if (id === 4) {
       this.renderSubUnit4(container);
+      if (window.robot) window.robot.setState('CHEER', 3000);
+      this.showRobotDialogue("Selamat datang di RoboPrompt Studio! Masukkan formulamu pada pilar R-T-C-F, lalu klik '⚡ Optimalkan dengan AI'!");
+    } else if (id === 5) {
+      this.renderSubUnit5(container);
       if (window.robot) window.robot.setState('IDLE');
       this.showRobotDialogue("Waktunya Uji Pemahaman! Jawab 25 butir evaluasi berikut dan raih skor minimal 80 untuk sertifikat!");
     }
@@ -1939,13 +1967,719 @@ SLIDE 5: KESIMPULAN & PENUTUP
     this.renderSubUnit2(document.getElementById('viewContainer'));
   }
 
-    // ========================================================
-  // SUB-UNIT 3: ROBOPROMPT STUDIO (INTEGRASI GROQ AI & FORMULA R-T-C-F)
   // ========================================================
+  // SUB-UNIT 3: LABORATORIUM UJI MANDIRI PROMPT PPLG
+  // ========================================================
+  initCheckerCases() {
+    this.checkerCases = [
+      {
+        id: 'case_branching',
+        badge: '🐍 Python · Percabangan if-else',
+        title: 'Kalkulator Diskon Toko Komputer',
+        topic: 'Logika Percabangan & Validasi Input',
+        scenario: 'Kamu bertugas sebagai programmer kasir toko perlengkapan komputer. Buatlah prompt yang meminta AI memprogram kalkulator kasir Python dengan aturan diskon bertingkat:\n• Belanja >= Rp 1.000.000 mendapat diskon 15%\n• Belanja Rp 500.000 s.d. Rp 999.999 mendapat diskon 10%\n• Belanja di bawah Rp 500.000 tidak mendapat diskon (0%)\nProgram juga wajib memvalidasi input agar tidak boleh bernilai negatif atau huruf menggunakan try-except.',
+        checklist: {
+          role: 'Senior Python Developer / Instruktur Vokasi PPLG SMK',
+          task: 'Membuat program kalkulator kasir dengan aturan diskon bertingkat',
+          context: 'Python 3, aturan persentase diskon belanja, validasi try-except input angka',
+          format: 'Kode program PEP 8 dengan komentar per baris dan 3 simulasi transaksi'
+        },
+        starterTemplate: 'Sebagai Senior Python Developer, tugas utamamu adalah merancang program kalkulator kasir berbasis percabangan if-elif-else.\n\nKonteks & Batasan:\n- Gunakan bahasa Python 3 dengan aturan diskon: total >= 1 juta diskon 15%, 500rb - 1jt diskon 10%, < 500rb diskon 0%.\n- Tambahkan penanganan error try-except jika input angka negatif atau bukan angka.\n\nFormat Luaran:\n- Kode lengkap dengan penjelasan alur logika dan 3 contoh kasus pengujian.',
+        keywords: {
+          role: ['python', 'developer', 'programmer', 'ahli', 'guru', 'instruktur', 'engineer', 'spesialis'],
+          task: ['kasir', 'diskon', 'hitung', 'kalkulator', 'buatkan', 'rancang', 'program', 'fungsi'],
+          context: ['if', 'else', 'elif', 'percabangan', 'try', 'except', 'validasi', 'negatif', '500', '1000', 'persen', 'aturan'],
+          format: ['kode', 'komentar', 'contoh', 'output', 'tabel', 'markdown', 'simulasi']
+        }
+      },
+      {
+        id: 'case_looping',
+        badge: '🔁 Algoritma · Perulangan & Array',
+        title: 'Rekapitulasi Nilai & Remedial Siswa',
+        topic: 'Perulangan for/while & Pengolahan Data Nilai',
+        scenario: 'Sebagai pengembang sistem informasi akademik SMK, buatlah prompt yang memerintahkan AI merancang program untuk mengolah data nilai 10 siswa SMK dalam array/list. Program harus menghitung nilai rata-rata kelas, mencari nilai tertinggi dan terendah, serta menampilkan daftar siswa yang wajib remedial karena nilainya di bawah KKTP (75).',
+        checklist: {
+          role: 'Software Engineer Spesialis Algoritma & Sistem Akademik',
+          task: 'Membuat program pengolahan array nilai dengan perulangan dan pencarian min/max/remedial',
+          context: 'List/array data nilai siswa, batas KKTP 75, penanganan jika array kosong',
+          format: 'Fungsi modular, tampilan tabel hasil di terminal, dan simulasi data dummy'
+        },
+        starterTemplate: 'Sebagai Software Engineer Spesialis Algoritma, tugas utamamu adalah membuat program pengolahan data nilai siswa dalam array.\n\nKonteks & Batasan:\n- Olah 10 data nilai siswa SMK: cari rata-rata, nilai tertinggi, terendah, dan siswa remedial (< 75).\n- Pastikan program efisien dan menangani kasus jika data nilai kosong.\n\nFormat Luaran:\n- Kode fungsi modular dan tabel hasil cetak di terminal.',
+        keywords: {
+          role: ['engineer', 'programmer', 'developer', 'instruktur', 'ahli', 'spesialis'],
+          task: ['rekap', 'nilai', 'olah', 'hitung', 'rata-rata', 'tertinggi', 'terendah', 'remedial', 'program'],
+          context: ['array', 'list', 'loop', 'for', 'while', 'perulangan', '75', 'kktp', 'siswa'],
+          format: ['tabel', 'fungsi', 'kode', 'output', 'markdown', 'terminal']
+        }
+      },
+      {
+        id: 'case_auth_security',
+        badge: '🔐 Web Dev · Fungsi & Validasi',
+        title: 'Validasi Form Registrasi Pengguna',
+        topic: 'Modular Function & Keamanan Formulir Web',
+        scenario: 'Kamu sedang membangun modul pendaftaran akun siswa pada web sekolah. Buatlah prompt yang meminta AI membuat fungsi validasi registrasi akun: username minimal 5 karakter alfabet, password minimal 8 karakter dengan kombinasi angka dan huruf kapital, serta sanitasi teks untuk mencegah input tag HTML/script berbahaya (XSS dasar).',
+        checklist: {
+          role: 'Web Security Engineer / Fullstack Web Developer',
+          task: 'Membuat fungsi validasi formulir registrasi dengan sanitasi teks dan validasi password',
+          context: 'JavaScript atau PHP, aturan username dan password policy, pesan error interaktif',
+          format: 'Fungsi reusable dengan return status valid/pesan error dan 3 contoh kasus pengujian'
+        },
+        starterTemplate: 'Sebagai Web Security Engineer, tugas utamamu adalah merancang fungsi validasi form registrasi akun pengguna.\n\nKonteks & Batasan:\n- Validasi username minimal 5 karakter, password minimal 8 karakter (kombinasi huruf kapital & angka).\n- Lakukan sanitasi input dari karakter berbahaya.\n\nFormat Luaran:\n- Fungsi bersih disertai return pesan error dan contoh pengujian data valid/invalid.',
+        keywords: {
+          role: ['security', 'web', 'developer', 'engineer', 'programmer', 'fullstack'],
+          task: ['validasi', 'registrasi', 'login', 'form', 'fungsi', 'sanitasi', 'password'],
+          context: ['username', 'karakter', 'kapital', 'angka', 'xss', 'keamanan', 'error', 'javascript', 'php'],
+          format: ['fungsi', 'return', 'kode', 'contoh', 'tabel', 'pesan']
+        }
+      },
+      {
+        id: 'case_ui_ux',
+        badge: '🎨 UI/UX · Desain Layar Sentuh',
+        title: 'Antarmuka Kasir Tablet Kantin Sekolah',
+        topic: 'Tata Letak Ramah Layar Sentuh & POS',
+        scenario: 'Kantin sekolah membutuhkan aplikasi kasir (Point of Sale) pada tablet layar sentuh 10 inci. Buatlah prompt yang meminta AI merancang tata letak dan hierarki antarmuka kasir yang intuitif: grid tombol cepat kategori makanan/minuman, panel keranjang belanja real-time, dan tombol checkout besar dengan kontras tinggi untuk mempermudah petugas kasir siswa.',
+        checklist: {
+          role: 'Senior UI/UX Product Designer',
+          task: 'Merancang arsitektur tata letak dan wireframe antarmuka kasir tablet POS',
+          context: 'Tablet 10 inci, kemudahan pengguna pemula, tombol ramah sentuhan (min. 44x44px), kontras WCAG',
+          format: 'Spesifikasi hierarki tata letak dalam tabel Markdown atau skema komponen HTML-CSS'
+        },
+        starterTemplate: 'Sebagai Senior UI/UX Designer, tugas utamamu adalah merancang arsitektur antarmuka aplikasi kasir POS tablet layar sentuh.\n\nKonteks & Batasan:\n- Ukuran layar tablet 10 inci untuk kasir kantin sekolah pemula.\n- Komponen mencakup grid menu cepat, keranjang belanja real-time, dan tombol checkout besar berkontras tinggi.\n\nFormat Luaran:\n- Spesifikasi komponen visual terstruktur dalam tabel Markdown beserta panduan alur pengguna.',
+        keywords: {
+          role: ['ui', 'ux', 'designer', 'perancang', 'product', 'arsitek'],
+          task: ['antarmuka', 'layout', 'wireframe', 'desain', 'tata letak', 'komponen', 'pos'],
+          context: ['tablet', 'layar', 'sentuh', 'kantin', 'kasir', 'tombol', 'keranjang', 'checkout', 'kontras'],
+          format: ['markdown', 'tabel', 'html', 'css', 'spesifikasi', 'hierarki']
+        }
+      },
+      {
+        id: 'case_database',
+        badge: '🗄️ Database · SQL DDL & Relasi',
+        title: 'Skema Database Perpustakaan SMK',
+        topic: 'Relasi Tabel, Primary Key & Foreign Key',
+        scenario: 'Kamu ditugaskan merancang basis data sistem perpustakaan digital SMK. Buatlah prompt yang meminta AI merancang skema relasi database: tabel buku (kode_buku, judul, pengarang, stok), tabel anggota siswa (nis, nama, kelas), dan tabel peminjaman (id_pinjam, tanggal_pinjam, tanggal_kembali, status) dengan kunci primer dan kunci asing (Foreign Key) yang menjaga integritas data.',
+        checklist: {
+          role: 'Database Administrator (DBA) & Data Architect',
+          task: 'Merancang skema database relasional perpustakaan dengan tabel buku, anggota, dan peminjaman',
+          context: 'MySQL/MariaDB, constraint PRIMARY KEY, FOREIGN KEY ON DELETE CASCADE, tipe data efisien',
+          format: 'Script SQL DDL (CREATE TABLE) lengkap dengan komentar dan contoh INSERT 3 data dummy'
+        },
+        starterTemplate: 'Sebagai Database Administrator (DBA), tugas utamamu adalah merancang skema database relasional SQL untuk sistem perpustakaan SMK.\n\nKonteks & Batasan:\n- Rancang tabel buku, anggota siswa, dan transaksi peminjaman dengan constraint Primary Key dan Foreign Key.\n- Gunakan mesin MySQL/MariaDB dengan penamaan snake_case.\n\nFormat Luaran:\n- Script SQL CREATE TABLE lengkap dengan komentar penjelasan relasi dan contoh query INSERT dummy.',
+        keywords: {
+          role: ['dba', 'database', 'administrator', 'architect', 'data', 'ahli'],
+          task: ['skema', 'database', 'tabel', 'relasi', 'rancang', 'ddl', 'sql'],
+          context: ['buku', 'anggota', 'peminjaman', 'primary', 'foreign', 'key', 'mysql', 'cascade'],
+          format: ['create', 'table', 'sql', 'script', 'insert', 'komentar', 'markdown']
+        }
+      }
+    ];
+  }
+
   renderSubUnit3(container) {
+    if (this.checkerCaseIndex === undefined || this.checkerCaseIndex < 0) this.checkerCaseIndex = 0;
+    if (this.checkerCaseIndex >= this.checkerCases.length) this.checkerCaseIndex = 0;
+    const curCase = this.checkerCases[this.checkerCaseIndex];
+    const prevHistory = this.checkerHistory[curCase.id] || null;
+
+    let navHtml = this.checkerCases.map((c, idx) => {
+      const isSolved = Boolean(this.state.checkerSolvedCases && this.state.checkerSolvedCases[c.id]);
+      const isActive = (idx === this.checkerCaseIndex);
+      return `
+        <button class="checker-case-chip ${isActive ? 'active' : ''} ${isSolved ? 'solved' : ''}" data-case-idx="${idx}">
+          <span class="chip-num">${isSolved ? '✓' : (idx + 1)}</span>
+          <span>${c.title}</span>
+        </button>
+      `;
+    }).join('');
+
     container.innerHTML = `
       <div class="section-header">
-        <div class="section-tag">🧪 Sub-Unit 3 · Praktik Studio KKA</div>
+        <div class="section-tag">🧪 Sub-Unit 3 · Laboratorium Uji Mandiri Prompt</div>
+        <h2 class="section-title">Pengecekan Kekuatan Formula R-T-C-F (Materi Dasar PPLG)</h2>
+        <p class="section-desc">Pilihlah salah satu studi kasus di bawah. Ketik rancangan prompt terbaikmu sesuai 4 pilar formula R-T-C-F, lalu klik tombol <strong>🔍 Cek Kekuatan Prompt dengan AI</strong> untuk menganalisis apakah promptmu tergolong <strong>Prompt Kuat</strong> atau <strong>Prompt Lemah</strong>!</p>
+      </div>
+
+      <div class="checker-layout">
+        <!-- Horizontal Case Selector -->
+        <div class="checker-case-nav" id="checkerCaseNav">
+          ${navHtml}
+        </div>
+
+        <div class="checker-main-grid">
+          <!-- Active Case Description & Checklist -->
+          <div class="checker-card">
+            <div class="checker-card-header">
+              <div>
+                <span class="checker-badge">${curCase.badge}</span>
+                <h3 style="font-size:16px; font-weight:800; color:var(--ink); margin-top:6px;">${curCase.title}</h3>
+                <div style="font-size:11.5px; color:var(--ink-2); font-weight:600;">Topik: ${curCase.topic}</div>
+              </div>
+            </div>
+
+            <div class="checker-scenario-box">
+              <strong style="color:var(--tech); display:block; margin-bottom:4px;">📋 Skenario Masalah:</strong>
+              ${this.escapeHtml(curCase.scenario).replace(/\n/g, '<br>')}
+            </div>
+
+            <div style="font-size:12px; font-weight:800; color:var(--ink); margin-bottom:4px;">
+              🎯 Kriteria Formula R-T-C-F yang Wajib Dipenuhi:
+            </div>
+            <div class="checker-checklist">
+              <div class="checker-checklist-item">
+                <strong>🎭 Role (Peran):</strong>
+                ${curCase.checklist.role}
+              </div>
+              <div class="checker-checklist-item">
+                <strong>🎯 Task (Tugas):</strong>
+                ${curCase.checklist.task}
+              </div>
+              <div class="checker-checklist-item">
+                <strong>📋 Context (Konteks):</strong>
+                ${curCase.checklist.context}
+              </div>
+              <div class="checker-checklist-item">
+                <strong>📐 Format (Bentuk Luaran):</strong>
+                ${curCase.checklist.format}
+              </div>
+            </div>
+
+            <div style="margin-top:14px; display:flex; gap:8px;">
+              <button class="btn btn-secondary" id="btnUseStarterTemplate" style="font-size:11.5px; padding:7px 12px;">
+                📋 Pakai Kerangka Templat R-T-C-F
+              </button>
+            </div>
+          </div>
+
+          <!-- Prompt Typing Area -->
+          <div class="checker-card">
+            <div class="checker-card-header">
+              <div style="font-weight:800; font-size:13.5px; color:var(--ink);">
+                ✍️ Lembar Ketik Prompt Siswa
+              </div>
+              <div id="checkerWordCounter" style="font-size:11px; font-weight:700; color:var(--ink-2);">
+                0 Kata · 0 Karakter
+              </div>
+            </div>
+
+            <textarea id="inpStudentCheckerPrompt" class="checker-textarea" placeholder="Tuliskan rancangan prompt lengkapmu di sini...&#10;&#10;Contoh:&#10;Sebagai [Role], tugas utamamu adalah [Task]...&#10;Konteks & Batasan: [Context]...&#10;Format Luaran: [Format]..."></textarea>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; gap:10px;">
+              <button class="btn btn-secondary" id="btnClearCheckerPrompt" style="font-size:12px; padding:8px 14px;">
+                🧹 Bersihkan
+              </button>
+
+              <button class="btn btn-primary" id="btnCheckPromptWithAI" style="font-size:13px; padding:10px 20px; font-weight:800; background:linear-gradient(135deg, #0A6FD6 0%, #00F0FF 100%);">
+                🔍 Cek Kekuatan Prompt dengan AI
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Evaluation Results Area -->
+        <div id="checkerResultArea"></div>
+      </div>
+    `;
+
+    // Attach Event Handlers
+    container.querySelectorAll('.checker-case-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const idx = parseInt(chip.getAttribute('data-case-idx'), 10);
+        this.switchCheckerCase(idx, container);
+      });
+    });
+
+    const textarea = container.querySelector('#inpStudentCheckerPrompt');
+    const wordCounter = container.querySelector('#checkerWordCounter');
+    textarea?.addEventListener('input', () => {
+      const val = textarea.value.trim();
+      const words = val ? val.split(/\s+/).length : 0;
+      if (wordCounter) wordCounter.textContent = `${words} Kata · ${textarea.value.length} Karakter`;
+    });
+
+    container.querySelector('#btnUseStarterTemplate')?.addEventListener('click', () => {
+      if (textarea) {
+        textarea.value = curCase.starterTemplate;
+        textarea.dispatchEvent(new Event('input'));
+        textarea.focus();
+        if (window.audioMgr) window.audioMgr.click();
+        this.showToast('Kerangka templat R-T-C-F berhasil disisipkan!', '📋');
+      }
+    });
+
+    container.querySelector('#btnClearCheckerPrompt')?.addEventListener('click', () => {
+      if (textarea) {
+        textarea.value = '';
+        textarea.dispatchEvent(new Event('input'));
+        textarea.focus();
+        if (window.audioMgr) window.audioMgr.click();
+      }
+    });
+
+    container.querySelector('#btnCheckPromptWithAI')?.addEventListener('click', () => {
+      this.executePromptCheck(container);
+    });
+
+    // If there is previous history for this case, re-render it
+    if (prevHistory) {
+      if (textarea && prevHistory.studentPrompt) {
+        textarea.value = prevHistory.studentPrompt;
+        textarea.dispatchEvent(new Event('input'));
+      }
+      this.renderCheckerResult(prevHistory.evaluation, prevHistory.source || 'AI Checker', container);
+    }
+  }
+
+  switchCheckerCase(index, container) {
+    if (window.audioMgr) window.audioMgr.whoosh();
+    this.checkerCaseIndex = index;
+    this.renderSubUnit3(container || document.getElementById('viewContainer'));
+  }
+
+  async executePromptCheck(container) {
+    const parent = container || document.getElementById('viewContainer');
+    const textarea = parent.querySelector('#inpStudentCheckerPrompt');
+    const resultArea = parent.querySelector('#checkerResultArea');
+    const btnCheck = parent.querySelector('#btnCheckPromptWithAI');
+
+    const promptText = textarea?.value.trim() || '';
+    if (promptText.length < 15) {
+      this.showToast('⚠️ Prompt terlalu pendek! Ketik minimal 15 karakter rancangan prompt.', '⚠️');
+      this.showRobotDialogue("Rancangan promptmu masih terlalu singkat! Susun kalimat instruksi yang lengkap sesuai formula R-T-C-F.");
+      textarea?.focus();
+      return;
+    }
+
+    const curCase = this.checkerCases[this.checkerCaseIndex];
+    if (btnCheck) {
+      btnCheck.disabled = true;
+      btnCheck.innerHTML = '⏳ Menganalisis Formula...';
+    }
+
+    if (window.audioMgr) window.audioMgr.whoosh();
+    if (window.robot) window.robot.setState('EXPLAIN', 8000);
+    this.showRobotDialogue("Robot dan AI sedang menganalisis promptmu: memeriksa pilar Role, Task, Context, dan Format...");
+
+    if (resultArea) {
+      resultArea.innerHTML = `
+        <div class="checker-result-box" style="text-align:center; padding:30px;">
+          <div class="gemini-spinner" style="margin:0 auto 12px; width:28px; height:28px; border-width:3px;"></div>
+          <div style="font-weight:800; font-size:15px; color:var(--tech);">🔍 AI Sedang Menganalisis Formula R-T-C-F...</div>
+          <div style="font-size:12px; color:var(--ink-2); margin-top:4px;">Memeriksa ketepatan Role, kejelasan Task, kedalaman Context, dan struktur Format luaran.</div>
+        </div>
+      `;
+    }
+
+    let evaluation = null;
+    let source = 'Groq AI';
+
+    try {
+      // 1. Try serverless endpoint (/api/gemini or /api/ai)
+      const payload = {
+        mode: 'checkPrompt',
+        prompt: promptText,
+        caseId: curCase.id,
+        caseTitle: curCase.title,
+        caseDesc: curCase.scenario,
+        caseTarget: JSON.stringify(curCase.checklist)
+      };
+
+      const endpoint = this.serverlessEndpoint || '/api/gemini';
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (res && res.ok) {
+          const json = await res.json().catch(() => ({}));
+          if (json.success && json.evaluation) {
+            evaluation = json.evaluation;
+            source = `${json.provider || 'Groq AI'} (${json.model || 'gpt-oss-120b'})`;
+          }
+        }
+      } catch (err) {
+        console.warn('Serverless check failed:', err);
+      }
+
+      // 2. Try direct Groq in browser
+      if (!evaluation) {
+        try {
+          evaluation = await this.callGroqCheckDirect(promptText, curCase);
+          if (evaluation) source = 'Groq AI (Client Direct)';
+        } catch (e) {
+          console.warn('Direct Groq check failed:', e);
+        }
+      }
+
+      // 3. Fallback: Intelligent heuristic evaluator
+      if (!evaluation) {
+        evaluation = this.evaluatePromptLocally(promptText, curCase);
+        source = 'Evaluator Heuristik Vokasi R-T-C-F';
+      }
+
+      // Save to history
+      this.checkerHistory[curCase.id] = {
+        studentPrompt: promptText,
+        evaluation: evaluation,
+        source: source
+      };
+
+      this.renderCheckerResult(evaluation, source, parent);
+
+      const score = evaluation.score || 0;
+      const isStrong = (evaluation.category === 'KUAT' || score >= 75);
+
+      if (isStrong) {
+        if (!this.state.checkerSolvedCases) this.state.checkerSolvedCases = {};
+        if (!this.state.checkerSolvedCases[curCase.id]) {
+          this.state.checkerSolvedCases[curCase.id] = true;
+          this.state.minigameScore += 25;
+        }
+        this.state.progress.sub3 = true;
+        this.saveSession();
+        this.renderSidebar();
+
+        if (window.confetti) {
+          window.confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+        }
+        if (window.audioMgr) {
+          window.audioMgr.successChime();
+          setTimeout(() => window.audioMgr.coinDing(), 400);
+        }
+        if (window.robot) window.robot.setState('CHEER', 4000);
+        this.showToast(`🎉 Luar biasa! Prompt dinyatakan ${evaluation.category} (Skor: ${score})!`, '⚡');
+        this.showRobotDialogue(`HEBAT! Promptmu tergolong ${evaluation.category} dengan skor ${score}/100! Formula R-T-C-F telah terpenuhi secara efektif!`);
+      } else {
+        if (window.audioMgr) window.audioMgr.errorBuzz();
+        if (window.robot) window.robot.setState('CONFUSE', 3500);
+        this.showToast(`Prompt tergolong ${evaluation.category} (Skor: ${score}). Simak saran perbaikan!`, 'ℹ️');
+        this.showRobotDialogue(`Promptmu tergolong ${evaluation.category} (Skor: ${score}/100). Periksa kartu pilar di bawah untuk melihat bagian yang perlu disempurnakan!`);
+      }
+
+    } catch (err) {
+      console.error('Prompt check error:', err);
+      evaluation = this.evaluatePromptLocally(promptText, curCase);
+      this.renderCheckerResult(evaluation, 'Evaluator Heuristik Cerdas', parent);
+    } finally {
+      if (btnCheck) {
+        btnCheck.disabled = false;
+        btnCheck.innerHTML = '🔍 Cek Kekuatan Prompt dengan AI';
+      }
+    }
+  }
+
+  async callGroqCheckDirect(promptText, curCase) {
+    const key = (typeof localStorage !== 'undefined' && (localStorage.getItem('roboprompt_groq_key') || localStorage.getItem('groq_api_key'))) || '';
+    if (!key || key.length < 10) return null;
+
+    const systemInstruction = `Kamu adalah AI Assessor & Evaluator Formula Prompt R-T-C-F profesional di Kurikulum Vokasi SMK Koding & Kecerdasan Artifisial (PPLG SMKN 1 Bawang).
+Tugas utamamu adalah: MENILAI dan MENGEVALUASI rancangan prompt yang diketik siswa untuk studi kasus materi dasar PPLG SMK.
+
+Studi Kasus:
+- Judul: ${curCase.title}
+- Skenario Masalah: ${curCase.scenario}
+- Kriteria Formula R-T-C-F: ${JSON.stringify(curCase.checklist)}
+
+Kriteria Evaluasi Formula R-T-C-F:
+1. Role: Apakah menetapkan peran/persona ahli spesifik?
+2. Task: Apakah tugas instruksinya jelas, terukur, dan operasional?
+3. Context: Apakah ada batasan teknis (bahasa pemrograman, aturan percabangan/looping, penanganan error, validasi input)?
+4. Format: Apakah meminta struktur luaran yang teratur (blok kode bersih, komentar penjelasan per baris, contoh pengujian)?
+
+Kategorikan hasil evaluasi ke dalam:
+- "KUAT" (Skor 85 - 100): Jika memenuhi 4 pilar formula R-T-C-F secara lengkap, spesifik, dan siap dieksekusi model AI.
+- "CUKUP" (Skor 65 - 84): Jika 3 pilar terpenuhi atau ada pilar yang masih kurang spesifik / ambigu.
+- "LEMAH" (Skor < 65): Jika terlalu singkat, generik, atau kehilangan 2+ pilar R-T-C-F penting.
+
+KEMBALIKAN HANYA FORMAT JSON VALID:
+{
+  "category": "KUAT" | "CUKUP" | "LEMAH",
+  "score": number (0-100),
+  "summary": "Penjelasan ringkas dalam 1-2 kalimat.",
+  "pillars": {
+    "role": { "status": "KUAT"|"CUKUP"|"LEMAH", "score": number(0-25), "feedback": "Catatan pilar role..." },
+    "task": { "status": "KUAT"|"CUKUP"|"LEMAH", "score": number(0-25), "feedback": "Catatan pilar task..." },
+    "context": { "status": "KUAT"|"CUKUP"|"LEMAH", "score": number(0-25), "feedback": "Catatan pilar context..." },
+    "format": { "status": "KUAT"|"CUKUP"|"LEMAH", "score": number(0-25), "feedback": "Catatan pilar format..." }
+  },
+  "strengths": ["Poin kelebihan 1", "Poin kelebihan 2"],
+  "improvements": ["Saran perbaikan 1", "Saran perbaikan 2"],
+  "improvedPromptExample": "Contoh prompt versi sempurna..."
+}`;
+
+    const models = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b'];
+    for (const model of models) {
+      try {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 9000);
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${key}`
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: [
+              { role: 'system', content: systemInstruction },
+              { role: 'user', content: `Evaluasi prompt siswa ini:\n"""\n${promptText}\n"""` }
+            ],
+            temperature: 0.2,
+            max_tokens: 1500
+          }),
+          signal: ctrl.signal
+        });
+        clearTimeout(tid);
+
+        if (res.ok) {
+          const json = await res.json().catch(() => ({}));
+          const text = json.choices?.[0]?.message?.content;
+          if (text) {
+            let clean = text.trim();
+            if (clean.startsWith('```')) {
+              clean = clean.replace(/^```[a-zA-Z]*\n?/, '').replace(/\n?```$/, '').trim();
+            }
+            return JSON.parse(clean);
+          }
+        }
+      } catch (e) {}
+    }
+    return null;
+  }
+
+  evaluatePromptLocally(promptText, curCase) {
+    const p = promptText.toLowerCase();
+
+    // Check Role
+    let roleFound = false;
+    const roleKeys = ['sebagai', 'peran', 'role', 'bertindaklah', 'kamu adalah', 'anda adalah', ...curCase.keywords.role];
+    for (const k of roleKeys) {
+      if (p.includes(k)) { roleFound = true; break; }
+    }
+    const roleScore = roleFound ? 25 : 5;
+    const roleStatus = roleFound ? 'KUAT' : 'LEMAH';
+    const roleFeedback = roleFound 
+      ? `Persona ahli (${curCase.checklist.role}) teridentifikasi dengan baik.`
+      : `Pilar Role belum terdefinisi. Awali dengan menetapkan persona, misal: "Sebagai ${curCase.checklist.role}..."`;
+
+    // Check Task
+    let taskFound = false;
+    const taskKeys = ['tugas', 'buatkan', 'rancang', 'tuliskan', 'program', 'fungsi', 'kode', ...curCase.keywords.task];
+    for (const k of taskKeys) {
+      if (p.includes(k)) { taskFound = true; break; }
+    }
+    const taskScore = (taskFound && promptText.length >= 25) ? 25 : (taskFound ? 15 : 5);
+    const taskStatus = (taskScore === 25) ? 'KUAT' : (taskScore === 15 ? 'CUKUP' : 'LEMAH');
+    const taskFeedback = (taskScore === 25)
+      ? 'Instruksi tugas diuraikan dengan kata kerja operasional yang jelas.'
+      : 'Tugas masih terlalu generik. Perjelas apa yang harus dihasilkan secara spesifik.';
+
+    // Check Context
+    let contextHits = 0;
+    for (const k of curCase.keywords.context) {
+      if (p.includes(k)) contextHits++;
+    }
+    const contextScore = contextHits >= 3 ? 25 : (contextHits >= 1 ? 15 : 5);
+    const contextStatus = contextScore === 25 ? 'KUAT' : (contextScore === 15 ? 'CUKUP' : 'LEMAH');
+    const contextFeedback = contextScore === 25
+      ? 'Konteks dan batasan teknis kasus (aturan logika & error handling) tercakup dengan baik.'
+      : (contextScore === 15 
+          ? 'Konteks sudah ada namun perlu diperdalam dengan batasan aturan logika dan validasi data.'
+          : 'Belum ada konteks teknis atau batasan. Masukkan aturan pemrosesan dan pencegahan error.');
+
+    // Check Format
+    let formatFound = false;
+    const formatKeys = ['format', 'tabel', 'markdown', 'output', 'komentar', 'penjelasan', 'struktur', 'dokumen', 'script'];
+    for (const k of formatKeys) {
+      if (p.includes(k)) { formatFound = true; break; }
+    }
+    const formatScore = formatFound ? 25 : 5;
+    const formatStatus = formatFound ? 'KUAT' : 'LEMAH';
+    const formatFeedback = formatFound
+      ? 'Format luaran hasil didefinisikan dengan spesifik (kode, komentar, penjelasan).'
+      : 'Instruksi format belum ada. Mintalah format luaran yang rapi, misal kode lengkap beserta komentar baris.';
+
+    const totalScore = roleScore + taskScore + contextScore + formatScore;
+    let category = 'LEMAH';
+    if (totalScore >= 85) category = 'KUAT';
+    else if (totalScore >= 65) category = 'CUKUP';
+
+    const strengths = [];
+    if (roleFound) strengths.push('Memiliki persona peran ahli yang jelas.');
+    if (taskScore >= 15) strengths.push('Instruksi tugas pokok sudah terarah.');
+    if (contextHits >= 2) strengths.push('Menyertakan batasan teknis yang kontekstual.');
+    if (formatFound) strengths.push('Meminta format luaran yang terstruktur.');
+    if (strengths.length === 0) strengths.push('Sudah mencoba merangkai instruksi kejuruan.');
+
+    const improvements = [];
+    if (!roleFound) improvements.push('Tambahkan pilar Role: tentukan profesi ahli yang memandu AI.');
+    if (taskScore < 25) improvements.push('Perjelas pilar Task dengan kata kerja operasional terukur.');
+    if (contextScore < 25) improvements.push('Perkaya pilar Context dengan aturan batasan logika dan error handling.');
+    if (!formatFound) improvements.push('Tentukan pilar Format: minta blok kode rapi, komentar, dan contoh kasus.');
+
+    return {
+      category: category,
+      score: totalScore,
+      summary: (category === 'KUAT')
+        ? 'Rancangan prompt sudah sangat matang dan memenuhi 4 pilar formula R-T-C-F secara harmonis.'
+        : (category === 'CUKUP'
+            ? 'Rancangan prompt sudah memiliki beberapa pilar, namun masih memerlukan penguatan pada detail konteks dan format.'
+            : 'Prompt masih tergolong lemah karena kehilangan sebagian besar pilar R-T-C-F dan rentan menimbulkan halusinasi AI.'),
+      pillars: {
+        role: { status: roleStatus, score: roleScore, feedback: roleFeedback },
+        task: { status: taskStatus, score: taskScore, feedback: taskFeedback },
+        context: { status: contextStatus, score: contextScore, feedback: contextFeedback },
+        format: { status: formatStatus, score: formatScore, feedback: formatFeedback }
+      },
+      strengths: strengths,
+      improvements: improvements,
+      improvedPromptExample: curCase.starterTemplate
+    };
+  }
+
+  renderCheckerResult(evaluation, sourceName, parent) {
+    const resultArea = parent.querySelector('#checkerResultArea');
+    if (!resultArea) return;
+
+    const cat = evaluation.category || 'LEMAH';
+    const catClass = cat.toLowerCase();
+    const score = evaluation.score || 0;
+
+    const catBadgeText = (cat === 'KUAT') 
+      ? '🟢 PROMPT KUAT (STANDAR INDUSTRI)' 
+      : ((cat === 'CUKUP') ? '🟡 PROMPT CUKUP KUAT (PERLU PERBAIKAN)' : '🔴 PROMPT LEMAH (AMBIGU / TIDAK LENGKAP)');
+
+    const p = evaluation.pillars || {};
+    const r = p.role || { status: 'LEMAH', score: 0, feedback: '-' };
+    const t = p.task || { status: 'LEMAH', score: 0, feedback: '-' };
+    const c = p.context || { status: 'LEMAH', score: 0, feedback: '-' };
+    const f = p.format || { status: 'LEMAH', score: 0, feedback: '-' };
+
+    const strengthsList = (evaluation.strengths || []).map(s => `<li>${this.escapeHtml(s)}</li>`).join('');
+    const improvementsList = (evaluation.improvements || []).map(i => `<li>${this.escapeHtml(i)}</li>`).join('');
+
+    resultArea.innerHTML = `
+      <div class="checker-result-box ${catClass}">
+        <div class="checker-result-header">
+          <div>
+            <span class="eval-category-pill ${catClass}">${catBadgeText}</span>
+            <div style="font-size:12px; color:var(--ink-2); margin-top:6px; font-weight:600;">
+              Evaluator: <strong>${sourceName}</strong> · Kriteria Kurikulum Merdeka PPLG
+            </div>
+          </div>
+          <div class="eval-score-wrap">
+            <span class="eval-score-num ${catClass}">${score}</span>
+            <span style="font-size:14px; font-weight:700; color:var(--ink-2);">/ 100 Poin</span>
+          </div>
+        </div>
+
+        <div style="font-size:13px; line-height:1.6; color:var(--ink); margin-top:12px; background:rgba(255,255,255,0.85); padding:10px 14px; border-radius:8px; border:1px solid #E2E8F0;">
+          <strong>📝 Ulasan AI:</strong> ${this.escapeHtml(evaluation.summary || '')}
+        </div>
+
+        <!-- 4 Pillars Breakdown -->
+        <div class="checker-pillars-grid">
+          <div class="pillar-eval-card status-${(r.status || 'lemah').toLowerCase()}">
+            <div class="pillar-eval-header">
+              <span>🎭 Role (Peran)</span>
+              <span class="status-tag ${(r.status || 'lemah').toLowerCase()}">${r.status || 'LEMAH'} (${r.score || 0}/25)</span>
+            </div>
+            <div>${this.escapeHtml(r.feedback || '-')}</div>
+          </div>
+
+          <div class="pillar-eval-card status-${(t.status || 'lemah').toLowerCase()}">
+            <div class="pillar-eval-header">
+              <span>🎯 Task (Tugas)</span>
+              <span class="status-tag ${(t.status || 'lemah').toLowerCase()}">${t.status || 'LEMAH'} (${t.score || 0}/25)</span>
+            </div>
+            <div>${this.escapeHtml(t.feedback || '-')}</div>
+          </div>
+
+          <div class="pillar-eval-card status-${(c.status || 'lemah').toLowerCase()}">
+            <div class="pillar-eval-header">
+              <span>📋 Context (Konteks)</span>
+              <span class="status-tag ${(c.status || 'lemah').toLowerCase()}">${c.status || 'LEMAH'} (${c.score || 0}/25)</span>
+            </div>
+            <div>${this.escapeHtml(c.feedback || '-')}</div>
+          </div>
+
+          <div class="pillar-eval-card status-${(f.status || 'lemah').toLowerCase()}">
+            <div class="pillar-eval-header">
+              <span>📐 Format (Luaran)</span>
+              <span class="status-tag ${(f.status || 'lemah').toLowerCase()}">${f.status || 'LEMAH'} (${f.score || 0}/25)</span>
+            </div>
+            <div>${this.escapeHtml(f.feedback || '-')}</div>
+          </div>
+        </div>
+
+        <!-- Strengths & Improvements -->
+        <div class="feedback-grid">
+          <div class="feedback-col strengths">
+            <strong>✅ Kelebihan Prompt Anda:</strong>
+            <ul>${strengthsList || '<li>Formula dasar sudah mulai terbentuk.</li>'}</ul>
+          </div>
+          <div class="feedback-col improvements">
+            <strong>⚠️ Saran Perbaikan Formula:</strong>
+            <ul>${improvementsList || '<li>Lengkapi pilar formula yang masih kurang spesifik.</li>'}</ul>
+          </div>
+        </div>
+
+        <!-- Improved Prompt Example -->
+        ${evaluation.improvedPromptExample ? `
+          <div style="margin-top:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:12.5px; font-weight:800; color:var(--ink);">
+                ✨ Contoh Revisi Prompt R-T-C-F Sempurna Versi Industri:
+              </span>
+              <button class="btn btn-secondary" id="btnCopyImprovedPrompt" style="font-size:11px; padding:4px 10px;">
+                📋 Salin Contoh
+              </button>
+            </div>
+            <div class="improved-prompt-box" id="improvedPromptBox">${this.escapeHtml(evaluation.improvedPromptExample)}</div>
+          </div>
+        ` : ''}
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+          ${(this.checkerCaseIndex < this.checkerCases.length - 1) ? `
+            <button class="btn btn-primary" id="btnNextCheckerCase" style="font-size:13px; padding:9px 18px;">
+              Lanjut ke Kasus Berikutnya ➔
+            </button>
+          ` : `
+            <button class="btn btn-primary" id="btnGoToStudio" style="font-size:13px; padding:9px 18px;">
+              Lanjut ke RoboPrompt Studio ➔
+            </button>
+          `}
+        </div>
+      </div>
+    `;
+
+    resultArea.querySelector('#btnCopyImprovedPrompt')?.addEventListener('click', () => {
+      const txt = evaluation.improvedPromptExample;
+      navigator.clipboard.writeText(txt).then(() => {
+        this.showToast('Contoh prompt sempurna berhasil disalin!', '📋');
+        if (window.audioMgr) window.audioMgr.click();
+      }).catch(() => {});
+    });
+
+    resultArea.querySelector('#btnNextCheckerCase')?.addEventListener('click', () => {
+      this.switchCheckerCase(this.checkerCaseIndex + 1, parent);
+    });
+
+    resultArea.querySelector('#btnGoToStudio')?.addEventListener('click', () => {
+      this.switchSubUnit(4);
+    });
+
+    resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // ========================================================
+  // SUB-UNIT 4: ROBOPROMPT STUDIO (INTEGRASI GROQ AI & FORMULA R-T-C-F)
+  // ========================================================
+  renderSubUnit4(container) {
+    container.innerHTML = `
+      <div class="section-header">
+        <div class="section-tag">⚡ Sub-Unit 4 · Praktik Studio KKA</div>
         <h2 class="section-title">RoboPrompt Studio: Perancang Prompt Formula R-T-C-F</h2>
         <p class="section-desc">Aplikasi ini dirancang khusus untuk membantumu menyusun prompt yang terstruktur dan berkualitas tinggi sesuai formula <strong>R-T-C-F (Role, Task, Context, Format)</strong>. Masukkan pilar-pilar di bawah, lalu klik <strong>⚡ Optimalkan dengan AI</strong> untuk menghasilkan prompt siap pakai yang sempurna!</p>
       </div>
@@ -2236,8 +2970,8 @@ SLIDE 5: KESIMPULAN & PENUTUP
         this.showToast('Prompt berhasil dioptimalkan oleh AI!', '⚡');
       }
 
-      // Update Sub-Unit 3 progress
-      this.state.progress.sub3 = true;
+      // Update Sub-Unit 4 progress
+      this.state.progress.sub4 = true;
       this.saveSession();
       this.renderSidebar();
 
@@ -2264,7 +2998,7 @@ SLIDE 5: KESIMPULAN & PENUTUP
         this.showToast('Mode Simulasi Aktif (Gagal terhubung ke AI)', 'ℹ️');
         this.showRobotDialogue("Formula R-T-C-F berhasil dirangkai menggunakan simulator cerdas!");
       }
-      this.state.progress.sub3 = true;
+      this.state.progress.sub4 = true;
       this.saveSession();
       this.renderSidebar();
     }
@@ -2682,7 +3416,7 @@ Format Output yang Diwajibkan:
     ];
   }
 
-  renderSubUnit4(container) {
+  renderSubUnit5(container) {
     const questions = this.getQuizQuestions();
 
     // If quiz is completed, show the official results dashboard
@@ -2703,7 +3437,7 @@ Format Output yang Diwajibkan:
 
     container.innerHTML = `
       <div class="section-header">
-        <div class="section-tag">📊 Sub-Unit 4 · Uji Kompetensi Akhir</div>
+        <div class="section-tag">📊 Sub-Unit 5 · Uji Kompetensi Akhir</div>
         <h2 class="section-title">Evaluasi Cerdas: 25 Butir Soal Rekayasa Prompt</h2>
         <p class="section-desc">Kerjakan seluruh 25 soal studi kasus di bawah ini. Batas Kriteria Ketercapaian Tujuan Pembelajaran (KKTP) adalah <strong>minimal 80 poin</strong> (20 soal benar) untuk menerbitkan Sertifikat Digital.</p>
       </div>
@@ -2800,7 +3534,7 @@ Format Output yang Diwajibkan:
         const idx = parseInt(btn.getAttribute('data-idx'), 10);
         this.quizIndex = idx;
         if (window.audioMgr) window.audioMgr.whoosh();
-        this.renderSubUnit4(container);
+        this.renderSubUnit5(container);
       });
     });
 
@@ -2809,7 +3543,7 @@ Format Output yang Diwajibkan:
       if (this.quizIndex > 0) {
         this.quizIndex--;
         if (window.audioMgr) window.audioMgr.whoosh();
-        this.renderSubUnit4(container);
+        this.renderSubUnit5(container);
       }
     });
 
@@ -2818,7 +3552,7 @@ Format Output yang Diwajibkan:
       if (this.quizIndex < questions.length - 1) {
         this.quizIndex++;
         if (window.audioMgr) window.audioMgr.whoosh();
-        this.renderSubUnit4(container);
+        this.renderSubUnit5(container);
       }
     });
 
@@ -2842,7 +3576,7 @@ Format Output yang Diwajibkan:
       this.showRobotDialogue("Jawabanmu belum tepat. Simak pembahasan di bawah untuk memperdalam pemahaman!");
     }
 
-    this.renderSubUnit4(document.getElementById('viewContainer'));
+    this.renderSubUnit5(document.getElementById('viewContainer'));
   }
 
   evaluateQuiz(questions, container) {
@@ -2862,7 +3596,7 @@ Format Output yang Diwajibkan:
     const isPassed = finalScore >= 80;
 
     if (isPassed) {
-      this.state.progress.sub4 = true;
+      this.state.progress.sub5 = true;
       this.saveSession();
       this.renderSidebar();
 
@@ -2874,7 +3608,7 @@ Format Output yang Diwajibkan:
       this.showRobotDialogue(`SELAMAT! Nilai ujianmu adalah ${finalScore} / 100 (LULUS KOMPETEN). Seluruh kriteria pembelajaran telah terpenuhi!`);
     } else {
       // Score < 80: MUST NOT PASS, Certificate MUST NOT appear
-      this.state.progress.sub4 = false;
+      this.state.progress.sub5 = false;
       this.saveSession();
       this.renderSidebar();
 
@@ -2899,7 +3633,8 @@ Format Output yang Diwajibkan:
     const is100Pct = this.state.progress.sub1 && 
                      this.state.progress.sub2 && 
                      this.state.progress.sub3 && 
-                     this.state.progress.sub4;
+                     this.state.progress.sub4 &&
+                     this.state.progress.sub5;
 
     container.innerHTML = `
       <div class="section-header">
@@ -2962,12 +3697,12 @@ Format Output yang Diwajibkan:
       this.quizAnswers = [];
       this.quizCompleted = false;
       this.state.quizScore = 0;
-      this.state.progress.sub4 = false;
+      this.state.progress.sub5 = false;
       this.saveSession();
       this.renderSidebar();
       if (window.audioMgr) window.audioMgr.whoosh();
       this.showRobotDialogue("Evaluasi diulang! Mari kita baca setiap studi kasus dengan teliti dan raih nilai di atas 80!");
-      this.renderSubUnit4(container);
+      this.renderSubUnit5(container);
     });
 
     // 3. Review Sub-2 Button
@@ -3000,7 +3735,8 @@ Format Output yang Diwajibkan:
     const is100Pct = this.state.progress.sub1 && 
                      this.state.progress.sub2 && 
                      this.state.progress.sub3 && 
-                     this.state.progress.sub4;
+                     this.state.progress.sub4 &&
+                     this.state.progress.sub5;
     if (!is100Pct) {
       this.showToast('⚠️ Sertifikat terkunci! Tuntaskan evaluasi dengan nilai minimal 80.');
       this.showRobotDialogue("Sertifikat digital masih terkunci! Kamu harus mencapai nilai minimal 80 pada Evaluasi & Kuis.");

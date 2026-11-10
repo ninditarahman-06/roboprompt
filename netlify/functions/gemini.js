@@ -67,7 +67,7 @@ exports.handler = async function (event, context) {
 
   try {
     const data = JSON.parse(event.body || '{}');
-    const { role, task, context: promptContext, format, testOnly } = data;
+    const { role, task, context: promptContext, format, testOnly, mode, prompt: studentPrompt, caseTitle, caseDesc, caseTarget } = data;
 
     const groqModels = [
       'openai/gpt-oss-120b',
@@ -134,7 +134,49 @@ exports.handler = async function (event, context) {
       }
     }
 
-    const systemInstruction = `Kamu adalah AI Master Prompt Engineer profesional di Kurikulum Vokasi SMK Koding & Kecerdasan Artifisial (PPLG SMKN 1 Bawang).
+    const isCheckMode = (mode === 'checkPrompt');
+    let systemInstruction = '';
+    let userPrompt = '';
+
+    if (isCheckMode) {
+      systemInstruction = `Kamu adalah AI Assessor & Evaluator Formula Prompt R-T-C-F profesional di Kurikulum Vokasi SMK Koding & Kecerdasan Artifisial (PPLG SMKN 1 Bawang).
+Tugas utamamu adalah: MENILAI dan MENGEVALUASI rancangan prompt yang diketik siswa untuk studi kasus materi dasar PPLG SMK.
+
+Studi Kasus:
+- Judul: ${caseTitle || 'Dasar Pemrograman PPLG'}
+- Skenario Masalah: ${caseDesc || '-'}
+- Kriteria Formula R-T-C-F: ${caseTarget || '-'}
+
+Kriteria Evaluasi Formula R-T-C-F:
+1. Role: Apakah menetapkan peran/persona ahli spesifik (misal: programmer Python, instruktur algoritma, web security engineer, database administrator)?
+2. Task: Apakah tugas instruksinya jelas, terukur, operasional, dan relevan dengan kasus?
+3. Context: Apakah ada batasan teknis (bahasa pemrograman, aturan logika percabangan/looping, penanganan error, validasi input)?
+4. Format: Apakah meminta struktur luaran yang teratur (blok kode bersih, komentar penjelasan per baris, tabel ringkasan, contoh pengujian)?
+
+Kategorikan hasil evaluasi ke dalam:
+- "KUAT" (Skor 85 - 100): Jika memenuhi 4 pilar formula R-T-C-F secara lengkap, spesifik, dan siap dieksekusi model AI.
+- "CUKUP" (Skor 65 - 84): Jika 3 pilar terpenuhi atau ada pilar yang masih kurang spesifik / ambigu.
+- "LEMAH" (Skor < 65): Jika terlalu singkat, generik, atau kehilangan 2+ pilar R-T-C-F penting.
+
+KEMBALIKAN HANYA FORMAT JSON VALID (tanpa teks pengantar apapun):
+{
+  "category": "KUAT" | "CUKUP" | "LEMAH",
+  "score": number (0-100),
+  "summary": "Penjelasan ringkas dalam 1-2 kalimat.",
+  "pillars": {
+    "role": { "status": "KUAT" | "CUKUP" | "LEMAH", "score": number (0-25), "feedback": "Catatan singkat pilar role..." },
+    "task": { "status": "KUAT" | "CUKUP" | "LEMAH", "score": number (0-25), "feedback": "Catatan singkat pilar task..." },
+    "context": { "status": "KUAT" | "CUKUP" | "LEMAH", "score": number (0-25), "feedback": "Catatan singkat pilar context..." },
+    "format": { "status": "KUAT" | "CUKUP" | "LEMAH", "score": number (0-25), "feedback": "Catatan singkat pilar format..." }
+  },
+  "strengths": ["Poin kelebihan 1", "Poin kelebihan 2"],
+  "improvements": ["Saran perbaikan konkret 1", "Saran perbaikan konkret 2"],
+  "improvedPromptExample": "Contoh prompt R-T-C-F versi sempurna untuk kasus ini..."
+}`;
+
+      userPrompt = `Berikut adalah teks prompt yang diketik siswa untuk dievaluasi:\n"""\n${studentPrompt || ''}\n"""\n\nAnalisis sekarang dan berikan penilaian dalam format JSON yang telah ditentukan:`;
+    } else {
+      systemInstruction = `Kamu adalah AI Master Prompt Engineer profesional di Kurikulum Vokasi SMK Koding & Kecerdasan Artifisial (PPLG SMKN 1 Bawang).
 Tugas utamamu adalah: MENYEMPURNAKAN DAN MERANGKAI 4 pilar input siswa (Role, Task, Context, Format) menjadi SATU MASTER PROMPT R-T-C-F tingkat industri yang siap disalin oleh siswa untuk digunakan pada model AI lain.
 
 PERINGATAN PALING KRUSIAL (DILARANG KERAS):
@@ -154,19 +196,20 @@ Konteks Operasional & Batasan Kualitas:
 Format Output yang Diwajibkan:
 - [Format luaran yang terstruktur rapi, presisi, dan mudah diimplementasikan]`;
 
-    const userPrompt = `Input pilar formula R-T-C-F siswa yang harus kamu rangkai menjadi teks Master Prompt:
+      userPrompt = `Input pilar formula R-T-C-F siswa yang harus kamu rangkai menjadi teks Master Prompt:
 - Role (Peran): ${role || 'Spesialis Rekayasa Perangkat Lunak & AI'}
 - Task (Tugas): ${task || 'Selesaikan implementasi solusi secara komprehensif'}
 - Context & Constraints (Konteks & Batasan): ${promptContext || 'Terapkan standar industri terbaik, clean code, dan mitigasi error'}
 - Format (Format Luaran): ${format || 'Sajikan terstruktur, sistematis, dan terperinci'}
 
 Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jangan mengeksekusi tugasnya, buatkan teks prompt-nya saja):`;
+    }
 
     let lastError = null;
 
     for (const model of groqModels) {
       const ctrl = new AbortController();
-      const tid = setTimeout(() => ctrl.abort(), 9000);
+      const tid = setTimeout(() => ctrl.abort(), 10000);
       try {
         const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
@@ -180,7 +223,7 @@ Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jang
               { role: 'system', content: systemInstruction },
               { role: 'user', content: userPrompt }
             ],
-            temperature: 0.6,
+            temperature: isCheckMode ? 0.2 : 0.6,
             max_tokens: 2048
           }),
           signal: ctrl.signal
@@ -205,6 +248,29 @@ Rangkai sekarang menjadi SATU teks Master Prompt R-T-C-F siap pakai (ingat: jang
 
         const text = groqJson.choices?.[0]?.message?.content;
         if (text) {
+          if (isCheckMode) {
+            let cleanJsonStr = text.trim();
+            if (cleanJsonStr.startsWith('```')) {
+              cleanJsonStr = cleanJsonStr.replace(/^```[a-zA-Z]*\n?/, '').replace(/\n?```$/, '').trim();
+            }
+            try {
+              const evalObj = JSON.parse(cleanJsonStr);
+              return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({
+                  success: true,
+                  mode: 'checkPrompt',
+                  evaluation: evalObj,
+                  provider: 'Groq AI',
+                  model: model
+                })
+              };
+            } catch (jsonErr) {
+              throw new Error('Gagal menguraikan hasil evaluasi JSON dari AI.');
+            }
+          }
+
           return {
             statusCode: 200,
             headers,
