@@ -2116,37 +2116,18 @@ SLIDE 5: KESIMPULAN & PENUTUP
               </div>
             </div>
 
-            <div class="checker-scenario-box">
-              <strong style="color:var(--tech); display:block; margin-bottom:4px;">📋 Skenario Masalah:</strong>
+            <div class="checker-scenario-box" style="flex:1;">
+              <strong style="color:var(--tech); display:block; margin-bottom:6px;">📋 Skenario Masalah:</strong>
               ${this.escapeHtml(curCase.scenario).replace(/\n/g, '<br>')}
             </div>
 
-            <div style="font-size:12px; font-weight:800; color:var(--ink); margin-bottom:4px;">
-              🎯 Kriteria Formula R-T-C-F yang Wajib Dipenuhi:
-            </div>
-            <div class="checker-checklist">
-              <div class="checker-checklist-item">
-                <strong>🎭 Role (Peran):</strong>
-                ${curCase.checklist.role}
+            <div style="margin-top:12px; padding:12px 14px; background:linear-gradient(135deg, rgba(74, 144, 226, 0.08), rgba(92, 107, 192, 0.08)); border-radius:10px; border:1px dashed var(--tech);">
+              <div style="font-size:12px; font-weight:800; color:var(--tech); margin-bottom:4px;">
+                💡 Petunjuk Praktik:
               </div>
-              <div class="checker-checklist-item">
-                <strong>🎯 Task (Tugas):</strong>
-                ${curCase.checklist.task}
+              <div style="font-size:11.5px; color:var(--ink-2); line-height:1.6;">
+                Analisis skenario masalah di atas, lalu susunlah prompt mandiri di lembar ketik dengan menerapkan formula <strong>R-T-C-F</strong> (Role, Task, Context, Format). Klik tombol <strong>"🔍 Uji Kualitas Prompt dengan AI"</strong> untuk menguji apakah promptmu tergolong Kuat atau Lemah!
               </div>
-              <div class="checker-checklist-item">
-                <strong>📋 Context (Konteks):</strong>
-                ${curCase.checklist.context}
-              </div>
-              <div class="checker-checklist-item">
-                <strong>📐 Format (Bentuk Luaran):</strong>
-                ${curCase.checklist.format}
-              </div>
-            </div>
-
-            <div style="margin-top:14px; display:flex; gap:8px;">
-              <button class="btn btn-secondary" id="btnUseStarterTemplate" style="font-size:11.5px; padding:7px 12px;">
-                📋 Pakai Kerangka Templat R-T-C-F
-              </button>
             </div>
           </div>
 
@@ -2194,16 +2175,6 @@ SLIDE 5: KESIMPULAN & PENUTUP
       const val = textarea.value.trim();
       const words = val ? val.split(/\s+/).length : 0;
       if (wordCounter) wordCounter.textContent = `${words} Kata · ${textarea.value.length} Karakter`;
-    });
-
-    container.querySelector('#btnUseStarterTemplate')?.addEventListener('click', () => {
-      if (textarea) {
-        textarea.value = curCase.starterTemplate;
-        textarea.dispatchEvent(new Event('input'));
-        textarea.focus();
-        if (window.audioMgr) window.audioMgr.click();
-        this.showToast('Kerangka templat R-T-C-F berhasil disisipkan!', '📋');
-      }
     });
 
     container.querySelector('#btnClearCheckerPrompt')?.addEventListener('click', () => {
